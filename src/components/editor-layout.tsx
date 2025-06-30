@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useCallback, useEffect } from 'react';
@@ -128,25 +129,30 @@ export function EditorLayout() {
   const handleRun = useCallback(async () => {
     if (!activeFile || !activeFile.language) return;
 
+    setActiveToolTab('output');
     setIsExecuting(true);
     setExecutionTranscript(null);
     setIsWaitingForInput(false);
-    setActiveToolTab('output');
 
     try {
       const result = await executeCode({ code: currentContent, language: activeFile.language });
-      if (result) {
+      
+      if (result && typeof result.output === 'string') {
         setExecutionTranscript(result.output);
-        setIsWaitingForInput(result.isWaitingForInput);
+        setIsWaitingForInput(result.isWaitingForInput || false);
       } else {
-        throw new Error("The AI returned an invalid or empty response.");
+        console.error("Execution Error: AI returned invalid data", result);
+        const errorMessage = "Execution failed: The AI returned an invalid response.";
+        setExecutionTranscript(errorMessage);
+        setIsWaitingForInput(false);
+        toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
       }
     } catch (error) {
-      console.error(error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-      setExecutionTranscript(`An error occurred during execution: ${errorMessage}`);
+      console.error("Execution Error: ", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during execution.";
+      setExecutionTranscript(`Execution Error: ${errorMessage}`);
       setIsWaitingForInput(false);
+      toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
     } finally {
       setIsExecuting(false);
     }
@@ -169,11 +175,14 @@ export function EditorLayout() {
             userInput: input,
         });
 
-        if (result) {
+        if (result && typeof result.output === 'string') {
             setExecutionTranscript(prev => (prev || '') + result.output);
-            setIsWaitingForInput(result.isWaitingForInput);
+            setIsWaitingForInput(result.isWaitingForInput || false);
         } else {
-            throw new Error("The AI returned an invalid or empty response.");
+            const errorMessage = "The AI returned an invalid response while waiting for input.";
+            setExecutionTranscript(prev => (prev || '') + `\nExecution Error: ${errorMessage}`);
+            setIsWaitingForInput(false);
+            toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
         }
     } catch (error) {
         console.error(error);
