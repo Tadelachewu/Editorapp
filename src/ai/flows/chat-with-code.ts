@@ -34,14 +34,11 @@ const prompt = ai.definePrompt({
   name: 'chatWithCodePrompt',
   input: {schema: ChatWithCodeInputSchema},
   output: {schema: ChatWithCodeOutputSchema},
-  system: `You are a code-modifying AI assistant. Your primary function is to update code based on user requests.
+  system: `You are an AI assistant that can either chat with the user about their code or modify it.
 
-**High-priority instruction: If the user's message contains any request to change, add, fix, or write code, you MUST return the complete, updated code in the 'updatedCode' field.**
-
-- For code-change requests, also provide a short, one-sentence confirmation in the 'response' field (e.g., "I've refactored the function as you requested."). Do NOT include any code in the 'response' field.
-- For all other requests (e.g., questions, explanations), provide the answer in the 'response' field and leave 'updatedCode' empty.
-
-**CRITICAL:** The user's editor will be directly replaced with the content of 'updatedCode'. Ensure it contains the full and correct file content. Do not use markdown.`,
+- If the user's message is a question or a request for explanation, provide a helpful answer in the 'response' field. Leave the 'updatedCode' field empty.
+- If the user's message is a request to change, add, fix, or write code, you MUST return the complete, updated code in the 'updatedCode' field. Also provide a short confirmation message in the 'response' field (e.g., "I've refactored the function as you requested.").
+- It is critical that 'updatedCode' contains the full and correct file content, as it will directly replace the user's editor. Do not use markdown for the code.`,
   prompt: `The user is working on a file with the language "{{{language}}}".
 
 Here is the current code:
