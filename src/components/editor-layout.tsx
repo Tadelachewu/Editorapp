@@ -150,14 +150,12 @@ export function EditorLayout() {
     if (!activeFile || !activeFile.language || !input.trim()) return;
 
     setIsExecuting(true);
-    const newTranscript = executionTranscript + input + '\n';
-    setExecutionTranscript(newTranscript);
-
+    
     try {
         const result = await executeCode({
             code: currentContent,
             language: activeFile.language,
-            previousTranscript: newTranscript,
+            previousTranscript: executionTranscript,
             userInput: input,
         });
 

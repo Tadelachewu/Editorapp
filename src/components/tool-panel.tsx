@@ -143,7 +143,6 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
                 </ScrollArea>
                 {showInput && (
                     <form onSubmit={handleSendExecutionInput} className="flex items-start gap-2 pt-2 border-t mt-2">
-                        <span className="pt-2 font-code text-muted-foreground">&gt;</span>
                         <Textarea
                             value={executionInput}
                             onChange={(e) => setExecutionInput(e.target.value)}

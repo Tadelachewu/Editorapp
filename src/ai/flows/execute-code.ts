@@ -41,10 +41,25 @@ You will be given a block of code, the previous terminal transcript, and a new l
 Your task is to continue the simulation as if the user just typed their input and pressed Enter.
 
 **Instructions:**
-- Your response MUST be ONLY the new output the program would print to the console (stdout).
-- DO NOT repeat or "echo" the user's input in your response. The terminal already displays it.
-- If the program waits for the next input without printing anything, provide an empty response.
+- Your response ("output") MUST be the user's input echoed back, followed by a newline, and then any new output the program would print to the console (stdout).
+- If the program waits for the next input without printing anything new, your response should just be the user's input followed by a newline and then nothing else.
 - If the program prints a newline, include it.
+
+**Example:**
+Previous Transcript:
+\`\`\`
+Enter your name: 
+\`\`\`
+User Input (stdin):
+\`\`\`
+John
+\`\`\`
+Your "output" field should contain:
+John
+Hello, John!
+Enter your age: 
+
+**Current State**
 
 **Previous Transcript:**
 \`\`\`
@@ -56,7 +71,7 @@ Your task is to continue the simulation as if the user just typed their input an
 {{{userInput}}}
 \`\`\`
 
-**New Program Output (stdout):**
+**Your Response (echoed input + new program output):**
 {{else}}
 Your task is to simulate the initial execution of this code and provide the output it would generate.
 
