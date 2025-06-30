@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { Code, FileCode2, PlusCircle, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { Code, PlusCircle, Trash2 } from 'lucide-react';
 import {
   SidebarHeader,
   SidebarMenu,
@@ -76,7 +77,13 @@ export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, o
       <SidebarHeader>
         <div className="flex items-center justify-between p-2">
             <div className='flex items-center gap-2'>
-              <FileCode2 className="w-8 h-8 text-primary" />
+              <Image
+                src="https://lh3.googleusercontent.com/a/ACg8ocKZi27ETTwwwG_Hhwo2juaRqQ17YqHkyxyk-5Mu8IzIMmj2Lg8=s288-c-no"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
               <span className="text-lg font-semibold">File Manager</span>
             </div>
             <Button variant="ghost" size="icon" onClick={onNewFile} className="w-7 h-7">
@@ -106,26 +113,29 @@ export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, o
                   <div className="flex flex-col gap-1">
                     {langFiles.map(file => (
                         <SidebarMenuItem key={file.id}>
-                          <SidebarMenuButton
-                              onClick={() => onFileSelect(file.id)}
-                              isActive={activeFileId === file.id}
-                              tooltip={file.name}
-                          >
-                              <LanguageIcon language={file.language} />
-                              <span className="flex-1 truncate">{file.name}</span>
-                              <Badge variant="outline" className="ml-auto mr-8">{badgeText[file.language]}</Badge>
-                          </SidebarMenuButton>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover/menu-item:opacity-100 focus:opacity-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteCandidate(file.id);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="relative flex w-full">
+                            <SidebarMenuButton
+                                onClick={() => onFileSelect(file.id)}
+                                isActive={activeFileId === file.id}
+                                tooltip={file.name}
+                                className="group w-full"
+                            >
+                                <LanguageIcon language={file.language} />
+                                <span className="flex-1 truncate">{file.name}</span>
+                                <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
+                            </SidebarMenuButton>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteCandidate(file.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </SidebarMenuItem>
                     ))}
                   </div>
