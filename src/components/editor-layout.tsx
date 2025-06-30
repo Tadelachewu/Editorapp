@@ -129,7 +129,7 @@ export function EditorLayout() {
     if (!activeFile || !activeFile.language) return;
 
     setIsExecuting(true);
-    setExecutionTranscript('');
+    setExecutionTranscript(null);
     setIsWaitingForInput(false);
     setActiveToolTab('output');
 
