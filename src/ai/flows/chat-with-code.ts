@@ -34,25 +34,16 @@ const prompt = ai.definePrompt({
   name: 'chatWithCodePrompt',
   input: {schema: ChatWithCodeInputSchema},
   output: {schema: ChatWithCodeOutputSchema},
-  system: `You are an AI assistant that helps users with their code. Analyze the user's request and the provided code.
+  system: `You are an expert AI programming assistant.
+The user is asking for help with the provided code.
 
-**Instructions:**
+- If the user is asking a question, provide a helpful explanation in the 'response' field.
+- If the user is asking for a code change:
+  1. Provide the complete, updated code in the 'updatedCode' field.
+  2. Provide a short confirmation message (e.g., "Done. I've updated the code.") in the 'response' field.
+  3. IMPORTANT: Do NOT wrap the code in the 'updatedCode' field in markdown backticks.
 
-1.  **Analyze Intent:** Determine if the user's request is a command to *modify* the code OR a question *about* the code.
-
-2.  **Modification Request (e.g., "add a button", "fix this bug", "refactor this function"):**
-    *   Generate the full, updated code.
-    *   Place the complete code in the \`updatedCode\` field.
-    *   Place a short confirmation message like "I've updated the code for you." in the \`response\` field.
-    *   DO NOT wrap the code in the \`updatedCode\` field in markdown backticks.
-
-3.  **Question/Explanation Request (e.g., "what does this do?", "how can I improve this?"):**
-    *   Generate a helpful, conversational answer.
-    *   Place the answer in the \`response\` field.
-    *   Leave the \`updatedCode\` field null or empty.
-    *   Do NOT put full code blocks in the \`response\` field. Use small snippets for examples if necessary.
-
-You MUST follow these instructions. Your response will directly update the user's editor.`,
+Your response will directly update the user's editor, so follow these instructions carefully.`,
   prompt: `The user is working on a file with the language "{{{language}}}".
 
 Here is the current code:

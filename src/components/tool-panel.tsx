@@ -90,7 +90,7 @@ export function ToolPanel({
   };
 
   const handleSendChatMessage = async () => {
-    if (!chatInput.trim() || !file || !file.language) return;
+    if (!chatInput.trim() || !file || !file.language || isChatting) return;
 
     const userMessage = { role: 'user' as const, content: chatInput };
     setChatMessages(prev => [...prev, userMessage]);
@@ -247,7 +247,7 @@ export function ToolPanel({
                   className="min-h-[40px] flex-1 resize-none"
                   rows={1}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !isChatting) {
                         e.preventDefault();
                         handleSendChatMessage();
                     }
