@@ -52,9 +52,7 @@ export function ToolPanel({
   const [executionInput, setExecutionInput] = useState('');
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const showInput = isWaitingForInput && !isExecuting;
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     // Reset chat when file changes
@@ -71,10 +69,10 @@ export function ToolPanel({
   }, [executionOutput, executionInput, chatMessages]);
 
   useEffect(() => {
-    if (showInput && activeTab === 'output') {
+    if (isWaitingForInput && activeTab === 'output') {
       inputRef.current?.focus();
     }
-  }, [showInput, activeTab]);
+  }, [isWaitingForInput, activeTab]);
 
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
@@ -122,15 +120,14 @@ export function ToolPanel({
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleChatFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendChatMessage();
   };
 
-
   const handleSendExecutionInput = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isExecuting) return;
+    if (isExecuting || !executionInput.trim()) return;
     onExecutionInput(executionInput);
     setExecutionInput('');
   };
@@ -160,38 +157,44 @@ export function ToolPanel({
           </TabsList>
           
           <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-            {isExecuting && !executionOutput && !showInput ? (
+            {isExecuting && !executionOutput ? (
               <div className="flex items-center text-sm text-muted-foreground p-4">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Executing code...
               </div>
-            ) : executionOutput || showInput ? (
-              <div className="flex flex-col h-full">
-                <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
-                <div
-                    className="rounded-md border bg-black/20 p-4 font-code text-sm h-full cursor-text flex-1"
-                    onClick={() => inputRef.current?.focus()}
-                  >
-                  <ScrollArea className="h-full" ref={scrollAreaRef}>
-                    <pre className="whitespace-pre-wrap h-full">
-                      <span>{executionOutput}</span>
-                      {showInput && (
-                        <form onSubmit={handleSendExecutionInput} className="inline">
-                          <input
-                            ref={inputRef}
-                            value={executionInput}
-                            onChange={(e) => setExecutionInput(e.target.value)}
-                            className="bg-transparent border-0 focus:outline-none focus:ring-0 p-0 ml-1 font-code text-sm w-auto"
-                            autoComplete="off"
-                            autoFocus
-                            spellCheck="false"
-                          />
-                        </form>
-                      )}
-                      {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
-                    </pre>
-                  </ScrollArea>
-                </div>
+            ) : executionOutput || isWaitingForInput ? (
+              <div className="flex flex-col h-full gap-2">
+                <h3 className="text-sm font-semibold px-1">Execution Output</h3>
+                <ScrollArea className="flex-1 rounded-md border bg-muted/20 p-4" ref={scrollAreaRef}>
+                  <pre className="whitespace-pre-wrap font-code text-sm">
+                    {executionOutput}
+                    {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
+                  </pre>
+                </ScrollArea>
+                {isWaitingForInput && (
+                  <form onSubmit={handleSendExecutionInput} className="flex items-center gap-2">
+                    <Textarea
+                      ref={inputRef}
+                      value={executionInput}
+                      onChange={(e) => setExecutionInput(e.target.value)}
+                      placeholder="Type your input here and press Enter..."
+                      className="min-h-[40px] flex-1 resize-none"
+                      rows={1}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendExecutionInput(e);
+                        }
+                      }}
+                      disabled={isExecuting}
+                      autoFocus
+                    />
+                    <Button type="submit" disabled={isExecuting} size="icon">
+                      <Send className="w-4 h-4" />
+                      <span className="sr-only">Send Input</span>
+                    </Button>
+                  </form>
+                )}
               </div>
             ) : (
               <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex items-center justify-center">
@@ -236,7 +239,7 @@ export function ToolPanel({
                     )}
                 </div>
             </ScrollArea>
-            <form onSubmit={handleFormSubmit} className="flex items-center gap-2 pt-2 border-t mt-2">
+            <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2 pt-2 border-t mt-2">
                 <Textarea
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}

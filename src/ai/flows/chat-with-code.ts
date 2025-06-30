@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const ChatWithCodeInputSchema = z.object({
   code: z.string().describe('The code the user is currently editing.'),
   language: z.string().describe('The programming language of the code.'),
-  message: z.string().describe('The user\'s message or question to the AI agent.'),
+  message: z.string().describe("The user's message or question to the AI agent."),
 });
 export type ChatWithCodeInput = z.infer<typeof ChatWithCodeInputSchema>;
 
@@ -34,21 +34,25 @@ const prompt = ai.definePrompt({
   name: 'chatWithCodePrompt',
   input: {schema: ChatWithCodeInputSchema},
   output: {schema: ChatWithCodeOutputSchema},
-  system: `You are an expert AI pair programmer. Your purpose is to help users by either answering their questions about code or by modifying the code for them.
+  system: `You are an AI assistant that helps users with their code. Analyze the user's request and the provided code.
 
-You will be given the user's current code, the programming language, and the user's request. You must decide whether the user wants to chat or edit the code.
+**Instructions:**
 
-1.  **If the user's request is a question, an explanation, or a general discussion about the code (e.g., "what does this do?", "how can I improve this?"):**
-    *   You MUST respond conversationally in the \`response\` field.
-    *   The \`updatedCode\` field MUST be null or empty.
-    *   Do NOT provide code in the \`response\` field unless it's a small snippet for explanation.
+1.  **Analyze Intent:** Determine if the user's request is a command to *modify* the code OR a question *about* the code.
 
-2.  **If the user's request is a command to change the code (e.g., "change this to...", "add a function that...", "fix the bug", "refactor this"):**
-    *   You MUST provide the ENTIRE, complete, modified code in the \`updatedCode\` field. Do not provide a diff or a snippet. The entire file content must be returned.
-    *   The \`updatedCode\` MUST NOT be wrapped in markdown backticks.
-    *   You MUST also provide a short, confirmation message in the \`response\` field, like "Done.", "I've updated the code for you.", or "Here are the changes.".
+2.  **Modification Request (e.g., "add a button", "fix this bug", "refactor this function"):**
+    *   Generate the full, updated code.
+    *   Place the complete code in the \`updatedCode\` field.
+    *   Place a short confirmation message like "I've updated the code for you." in the \`response\` field.
+    *   DO NOT wrap the code in the \`updatedCode\` field in markdown backticks.
 
-**CRITICAL:** The \`updatedCode\` field will directly replace the user's file. Ensure it is complete and correct.`,
+3.  **Question/Explanation Request (e.g., "what does this do?", "how can I improve this?"):**
+    *   Generate a helpful, conversational answer.
+    *   Place the answer in the \`response\` field.
+    *   Leave the \`updatedCode\` field null or empty.
+    *   Do NOT put full code blocks in the \`response\` field. Use small snippets for examples if necessary.
+
+You MUST follow these instructions. Your response will directly update the user's editor.`,
   prompt: `The user is working on a file with the language "{{{language}}}".
 
 Here is the current code:
