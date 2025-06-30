@@ -1,4 +1,4 @@
-import type { ProjectFile, FileContentStore, Version, Language, FileType } from './types';
+import type { ProjectFile, FileContentStore, Language, FileType } from './types';
 
 export const initialFiles: ProjectFile[] = [
   { id: '1', name: 'main.cpp', type: 'cpp', language: 'C++' },
@@ -117,7 +117,7 @@ export const initialContent: FileContentStore = {
   '8': goContent,
 };
 
-export const initialHistorySeed: Record<string, Omit<Version, 'id'>[]> = {
+export const initialHistorySeed: Record<string, { content: string; timestamp: Date }[]> = {
   '1': [{ content: cppMainContent, timestamp: new Date() }],
   '2': [{ content: rnAppContent, timestamp: new Date() }],
   '3': [{ content: cppHeaderContent, timestamp: new Date() }],

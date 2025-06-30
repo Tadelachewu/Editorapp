@@ -57,9 +57,10 @@ export function EditorLayout() {
   }, [activeFileId]);
 
   const activeFile = files?.find(f => f.id === activeFileId);
-  const activeFileHistory = useLiveQuery(() => {
+  const activeFileHistory = useLiveQuery(async () => {
     if (!activeFileId) return [];
-    return db.versions.where('fileId').equals(activeFileId).reverse().sortBy('timestamp');
+    const versions = await db.versions.where('fileId').equals(activeFileId).sortBy('timestamp');
+    return versions.reverse();
   }, [activeFileId]);
 
 

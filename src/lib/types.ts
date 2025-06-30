@@ -9,19 +9,13 @@ export type ProjectFile = {
   language: Language;
 };
 
-export type Version = {
-  id:string;
-  content: string;
-  timestamp: Date;
-};
-
 export type FileContent = {
   id: string; // This is the file ID
   content: string;
 }
 
 export type DbVersion = {
-  vid?: number;
+  vid?: number; // Primary key, auto-incremented. Optional for creation.
   fileId: string;
   content: string;
   timestamp: Date;
@@ -29,4 +23,3 @@ export type DbVersion = {
 
 
 export type FileContentStore = Record<string, string>;
-export type FileHistoryStore = Record<string, Version[]>;
