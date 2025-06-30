@@ -68,7 +68,7 @@ export function ToolPanel({
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [executionOutput, executionInput]);
+  }, [executionOutput, executionInput, chatMessages]);
 
   useEffect(() => {
     if (showInput && activeTab === 'output') {
@@ -161,14 +161,14 @@ export function ToolPanel({
                 Executing code...
               </div>
             ) : executionOutput || showInput ? (
-              <>
+              <div className="flex flex-col h-full">
                 <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
-                <ScrollArea className="flex-1 -mx-1 px-1" ref={scrollAreaRef}>
-                  <div
-                    className="rounded-md border bg-card p-4 font-code text-sm h-full cursor-text"
+                <div
+                    className="rounded-md border bg-black/20 p-4 font-code text-sm h-full cursor-text flex-1"
                     onClick={() => inputRef.current?.focus()}
                   >
-                    <pre className="whitespace-pre-wrap">
+                  <ScrollArea className="h-full" ref={scrollAreaRef}>
+                    <pre className="whitespace-pre-wrap h-full">
                       <span>{executionOutput}</span>
                       {showInput && (
                         <form onSubmit={handleSendExecutionInput} className="inline">
@@ -185,11 +185,11 @@ export function ToolPanel({
                       )}
                       {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
                     </pre>
-                  </div>
-                </ScrollArea>
-              </>
+                  </ScrollArea>
+                </div>
+              </div>
             ) : (
-              <div className="text-center text-sm text-muted-foreground p-4">
+              <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex items-center justify-center">
                 <p>
                   Click the "Run" button in the editor to execute the code and
                   see the output here.
@@ -199,12 +199,13 @@ export function ToolPanel({
           </TabsContent>
 
           <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
-            <ScrollArea className="flex-1 -mx-6 px-6 py-4">
+            <ScrollArea className="flex-1 -mx-6 px-6 py-4" ref={scrollAreaRef}>
                 <div className="space-y-4">
                     {chatMessages.length === 0 && !isChatting && (
                          <div className="text-center text-sm text-muted-foreground p-4">
-                            <p>Ask the AI agent about your code.</p>
-                            <p className="text-xs">e.g., "Explain this function", "How can I improve this?", "Write a test for this code."</p>
+                            <MessageSquare className="w-8 h-8 mx-auto mb-2" />
+                            <p className="font-semibold">Chat with the AI Agent</p>
+                            <p className="text-xs">Ask to explain, improve, or refactor your code.</p>
                         </div>
                     )}
                     {chatMessages.map((message, index) => (
@@ -234,7 +235,7 @@ export function ToolPanel({
                 <Textarea
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask the AI agent anything..."
+                  placeholder="e.g., Explain this code to me..."
                   className="min-h-[40px] flex-1 resize-none"
                   rows={1}
                   onKeyDown={(e) => {
@@ -251,13 +252,26 @@ export function ToolPanel({
             </form>
           </TabsContent>
 
-          <TabsContent value="improvements" className="flex-1 mt-4 overflow-y-auto">
-            <Button onClick={handleGenerateImprovements} disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
-              Analyze Code for Improvements
-            </Button>
-            {isLoading && !improvements && <p className="mt-4 text-sm text-muted-foreground">Generating...</p>}
-            {improvements && <pre className="mt-4 whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">{improvements}</pre>}
+          <TabsContent value="improvements" className="flex-1 mt-4 overflow-y-auto flex flex-col items-center justify-center text-center">
+            {isLoading ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
+                </>
+            ) : improvements ? (
+                <ScrollArea className="w-full h-full">
+                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left">{improvements}</pre>
+                </ScrollArea>
+            ) : (
+                <>
+                  <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="font-semibold mb-2">Code Improvements</p>
+                  <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
+                  <Button onClick={handleGenerateImprovements}>
+                    Analyze Code
+                  </Button>
+                </>
+            )}
           </TabsContent>
           <TabsContent value="history" className="flex-1 mt-4 overflow-y-auto">
             {history.length > 0 ? (
@@ -268,12 +282,16 @@ export function ToolPanel({
                       <p className="text-sm">Saved {formatDistanceToNow(v.timestamp, { addSuffix: true })}</p>
                       <p className="text-xs text-muted-foreground">{v.timestamp.toLocaleString()}</p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => onRevert(v.vid!)}>Revert</Button>
+                    <Button variant="ghost" size="sm" onClick={() => v.vid && onRevert(v.vid)}>Revert</Button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">No version history for this file.</p>
+                <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                    <History className="w-8 h-8 mx-auto mb-2" />
+                    <p className="font-semibold">Version History</p>
+                    <p>No version history for this file yet. Save the file to create a version.</p>
+                </div>
             )}
           </TabsContent>
         </Tabs>
