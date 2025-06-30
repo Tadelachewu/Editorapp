@@ -12,7 +12,6 @@ import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements'
 import { chatWithCode } from '@/ai/flows/chat-with-code';
 import type { ProjectItem, DbVersion, Language } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface ToolPanelProps {
@@ -132,31 +131,39 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
                 Executing code...
               </div>
             ) : executionOutput ? (
-                <div className="flex-1 flex flex-col min-h-0">
-                    <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
-                    <ScrollArea className="flex-1 -mx-1 px-1">
-                        <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">
-                            {executionOutput}
-                            {isExecuting && (
-                                <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
-                            )}
-                        </pre>
-                    </ScrollArea>
-                    {showInput && (
-                        <form onSubmit={handleSendExecutionInput} className="flex items-center gap-2 pt-2 border-t mt-2">
-                            <Input
-                                value={executionInput}
-                                onChange={(e) => setExecutionInput(e.target.value)}
-                                placeholder="Enter input..."
-                                className="h-9 font-code"
-                                autoFocus
-                            />
-                            <Button type="submit" size="icon" className="h-9 w-9" disabled={isExecuting}>
-                                <Send className="w-4 h-4" />
-                            </Button>
-                        </form>
-                    )}
-                </div>
+              <>
+                <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
+                <ScrollArea className="flex-1 -mx-1 px-1">
+                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">
+                        {executionOutput}
+                        {isExecuting && (
+                            <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+                        )}
+                    </pre>
+                </ScrollArea>
+                {showInput && (
+                    <form onSubmit={handleSendExecutionInput} className="flex items-start gap-2 pt-2 border-t mt-2">
+                        <span className="pt-2 font-code text-muted-foreground">&gt;</span>
+                        <Textarea
+                            value={executionInput}
+                            onChange={(e) => setExecutionInput(e.target.value)}
+                            placeholder="Enter input..."
+                            className="min-h-[40px] flex-1 resize-none font-code"
+                            rows={1}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendExecutionInput(e as any);
+                                }
+                            }}
+                            autoFocus
+                        />
+                        <Button type="submit" size="icon" className="h-9 w-9" disabled={isExecuting}>
+                            <Send className="w-4 h-4" />
+                        </Button>
+                    </form>
+                )}
+              </>
             ) : (
               <div className="text-center text-sm text-muted-foreground p-4">
                 <p>
