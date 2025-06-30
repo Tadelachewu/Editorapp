@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Code, FileCode2 } from 'lucide-react';
 import {
   SidebarHeader,
@@ -9,7 +8,6 @@ import {
   SidebarContent,
   SidebarMenuButton
 } from '@/components/ui/sidebar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ProjectFile, Language } from '@/lib/types';
 import { Badge } from './ui/badge';
 
@@ -53,56 +51,41 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
 
   const languageOrder: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
   
-  const activeFile = files.find(f => f.id === activeFileId);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(
-    activeFile?.language || (Object.keys(groupedFiles).length > 0 ? Object.keys(groupedFiles)[0] as Language : 'C++')
-  );
-
-  useEffect(() => {
-    if (activeFile) {
-      setSelectedLanguage(activeFile.language);
-    }
-  }, [activeFile]);
-
-  const availableLanguages = languageOrder.filter(lang => groupedFiles[lang]?.length > 0);
-  const filesForSelectedLanguage = groupedFiles[selectedLanguage] || [];
-
   return (
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
             <FileCode2 className="w-8 h-8 text-primary" />
-            <span className="text-lg font-semibold">CodeSync Edit</span>
+            <span className="text-lg font-semibold">File Manager</span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-2 flex flex-col">
-        <div className="px-2 pb-2">
-          <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as Language)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a language" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableLanguages.map(language => (
-                <SelectItem key={language} value={language}>{language}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <SidebarMenu className="px-2 flex-1 overflow-y-auto">
-            {filesForSelectedLanguage.map(file => (
-                <SidebarMenuItem key={file.id}>
-                <SidebarMenuButton
-                    onClick={() => onFileSelect(file.id)}
-                    isActive={activeFileId === file.id}
-                    tooltip={file.name}
-                >
-                    <LanguageIcon language={file.language} />
-                    <span>{file.name}</span>
-                    <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
-                </SidebarMenuButton>
-                </SidebarMenuItem>
-            ))}
+      <SidebarContent className="flex flex-col">
+        <SidebarMenu className="flex-1 overflow-y-auto px-2">
+            {languageOrder.map(language => {
+              const langFiles = groupedFiles[language];
+              if (!langFiles || langFiles.length === 0) return null;
+
+              return (
+                <div key={language} className="py-2">
+                  <h3 className="px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{language}</h3>
+                  <div className="flex flex-col gap-1">
+                    {langFiles.map(file => (
+                        <SidebarMenuItem key={file.id}>
+                          <SidebarMenuButton
+                              onClick={() => onFileSelect(file.id)}
+                              isActive={activeFileId === file.id}
+                              tooltip={file.name}
+                          >
+                              <LanguageIcon language={file.language} />
+                              <span>{file.name}</span>
+                              <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
         </SidebarMenu>
       </SidebarContent>
     </>
