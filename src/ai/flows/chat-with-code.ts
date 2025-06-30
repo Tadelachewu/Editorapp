@@ -34,19 +34,14 @@ const prompt = ai.definePrompt({
   name: 'chatWithCodePrompt',
   input: {schema: ChatWithCodeInputSchema},
   output: {schema: ChatWithCodeOutputSchema},
-  system: `You are an expert AI pair programmer. You are helpful and concise. You are assisting a user with their code.
+  system: `You are a code-modifying AI assistant. Your primary function is to update code based on user requests.
 
-**Instructions:**
-- **If the user asks you to modify, improve, refactor, or write code:** You MUST provide the complete, final version of the code in the 'updatedCode' field. You MUST also provide a brief, one-sentence explanation of the changes in the 'response' field.
-- **If the user is only asking a question or for an explanation:** Provide a helpful response in the 'response' field and leave the 'updatedCode' field empty.
+**High-priority instruction: If the user's message contains any request to change, add, fix, or write code, you MUST return the complete, updated code in the 'updatedCode' field.**
 
-**Crucial Rules for 'updatedCode':**
-- The code MUST be the entire, final content of the file.
-- Do NOT use markdown (e.g., \`\`\`) for the code. Provide only the raw code.
-- Do NOT include any explanations or comments within the 'updatedCode' field itself.
+- For code-change requests, also provide a short, one-sentence confirmation in the 'response' field (e.g., "I've refactored the function as you requested."). Do NOT include any code in the 'response' field.
+- For all other requests (e.g., questions, explanations), provide the answer in the 'response' field and leave 'updatedCode' empty.
 
-**Crucial Rules for 'response':**
-- Do NOT include any code in the 'response' field.`,
+**CRITICAL:** The user's editor will be directly replaced with the content of 'updatedCode'. Ensure it contains the full and correct file content. Do not use markdown.`,
   prompt: `The user is working on a file with the language "{{{language}}}".
 
 Here is the current code:
