@@ -10,8 +10,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements';
 import { chatWithCode } from '@/ai/flows/chat-with-code';
-import type { ProjectItem, DbVersion } from '@/lib/types';
+import type { ProjectItem, DbVersion, Language } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface ToolPanelProps {
@@ -21,12 +22,13 @@ interface ToolPanelProps {
   onRevert: (versionId: number) => void;
   isExecuting: boolean;
   executionOutput: string;
+  onExecutionInput: (input: string) => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onCodeUpdate: (newCode: string) => void;
 }
 
-export function ToolPanel({ file, content, history, onRevert, isExecuting, executionOutput, activeTab, onTabChange, onCodeUpdate }: ToolPanelProps) {
+export function ToolPanel({ file, content, history, onRevert, isExecuting, executionOutput, onExecutionInput, activeTab, onTabChange, onCodeUpdate }: ToolPanelProps) {
   const [improvements, setImprovements] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -34,6 +36,8 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
+  
+  const [executionInput, setExecutionInput] = useState('');
 
   useEffect(() => {
     // Reset chat when file changes
@@ -87,6 +91,16 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
     }
   };
 
+  const handleSendExecutionInput = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!executionInput.trim()) return;
+    onExecutionInput(executionInput);
+    setExecutionInput('');
+  };
+
+  const interactiveLanguages: (Language | null)[] = ['C++', 'Python', 'Java', 'Go', 'Node.js'];
+  const showInput = interactiveLanguages.includes(file?.language || null) && !!executionOutput && !isExecuting;
+
   if (!file) {
     return (
         <Card className="h-full flex items-center justify-center">
@@ -111,19 +125,38 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="output" className="flex-1 mt-4 overflow-y-auto">
-            {isExecuting ? (
+          <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
+            {isExecuting && !executionOutput ? (
               <div className="flex items-center text-sm text-muted-foreground p-4">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Executing code...
               </div>
             ) : executionOutput ? (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold">Execution Output</h3>
-                <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">
-                  {executionOutput}
-                </pre>
-              </div>
+                <div className="flex-1 flex flex-col min-h-0">
+                    <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
+                    <ScrollArea className="flex-1 -mx-1 px-1">
+                        <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">
+                            {executionOutput}
+                            {isExecuting && (
+                                <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+                            )}
+                        </pre>
+                    </ScrollArea>
+                    {showInput && (
+                        <form onSubmit={handleSendExecutionInput} className="flex items-center gap-2 pt-2 border-t mt-2">
+                            <Input
+                                value={executionInput}
+                                onChange={(e) => setExecutionInput(e.target.value)}
+                                placeholder="Enter input..."
+                                className="h-9 font-code"
+                                autoFocus
+                            />
+                            <Button type="submit" size="icon" className="h-9 w-9" disabled={isExecuting}>
+                                <Send className="w-4 h-4" />
+                            </Button>
+                        </form>
+                    )}
+                </div>
             ) : (
               <div className="text-center text-sm text-muted-foreground p-4">
                 <p>

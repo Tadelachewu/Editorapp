@@ -28,7 +28,7 @@ export function EditorLayout() {
 
 
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionOutput, setExecutionOutput] = useState('');
+  const [executionTranscript, setExecutionTranscript] = useState('');
   const [activeToolTab, setActiveToolTab] = useState('improvements');
   
   useEffect(() => {
@@ -48,7 +48,7 @@ export function EditorLayout() {
   useEffect(() => {
     let stale = false;
     if (activeFileId) {
-      setExecutionOutput('');
+      setExecutionTranscript('');
       db.fileContents.get(activeFileId).then(fileContent => {
         if (!stale && fileContent) {
           setCurrentContent(fileContent.content);
@@ -74,7 +74,7 @@ export function EditorLayout() {
     const item = allItems?.find(i => i.id === id);
     if (item?.itemType === 'file') {
       setActiveFileId(id);
-      setExecutionOutput('');
+      setExecutionTranscript('');
       setActiveToolTab('improvements');
     }
   }, [allItems]);
@@ -126,13 +126,13 @@ export function EditorLayout() {
     if (!activeFile || !activeFile.language) return;
 
     setIsExecuting(true);
-    setExecutionOutput('');
+    setExecutionTranscript('');
     setActiveToolTab('output');
 
     try {
       const result = await executeCode({ code: currentContent, language: activeFile.language });
       if (result && typeof result.output === 'string') {
-        setExecutionOutput(result.output);
+        setExecutionTranscript(result.output);
       } else {
         throw new Error("The AI returned an invalid or empty response.");
       }
@@ -140,11 +140,42 @@ export function EditorLayout() {
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-      setExecutionOutput(`An error occurred during execution: ${errorMessage}`);
+      setExecutionTranscript(`An error occurred during execution: ${errorMessage}`);
     } finally {
       setIsExecuting(false);
     }
   }, [activeFile, currentContent, toast]);
+
+  const handleExecutionInput = useCallback(async (input: string) => {
+    if (!activeFile || !activeFile.language || !input.trim()) return;
+
+    setIsExecuting(true);
+    const newTranscript = executionTranscript + input + '\n';
+    setExecutionTranscript(newTranscript);
+
+    try {
+        const result = await executeCode({
+            code: currentContent,
+            language: activeFile.language,
+            previousTranscript: newTranscript,
+            userInput: input,
+        });
+
+        if (result && typeof result.output === 'string') {
+            setExecutionTranscript(prev => prev + result.output);
+        } else {
+            throw new Error("The AI returned an invalid or empty response.");
+        }
+    } catch (error) {
+        console.error(error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
+        setExecutionTranscript(prev => prev + `\nAn error occurred during execution: ${errorMessage}`);
+    } finally {
+        setIsExecuting(false);
+    }
+  }, [activeFile, currentContent, executionTranscript, toast]);
+
 
   const openNewItemDialog = (parentId: string | null) => {
     setNewItemParentId(parentId);
@@ -259,7 +290,8 @@ export function EditorLayout() {
                 history={activeFileHistory || []}
                 onRevert={handleRevert}
                 isExecuting={isExecuting}
-                executionOutput={executionOutput}
+                executionOutput={executionTranscript}
+                onExecutionInput={handleExecutionInput}
                 activeTab={activeToolTab}
                 onTabChange={setActiveToolTab}
                 onCodeUpdate={handleCodeUpdate}
