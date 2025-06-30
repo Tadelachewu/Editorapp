@@ -77,10 +77,13 @@ export function EditorLayout() {
 
     try {
       const result = await executeCode({ code: activeFileContent, language: activeFile.language });
-      if (result?.output) {
+      // The output can be an empty string for programs that don't print anything.
+      // We should handle that as a valid case.
+      if (result && typeof result.output === 'string') {
         setExecutionOutput(result.output);
       } else {
-        throw new Error("The AI failed to generate a valid output for the code execution.");
+        // This case handles if the AI returns a malformed object or null.
+        throw new Error("The AI returned an invalid or empty response.");
       }
     } catch (error) {
       console.error(error);
