@@ -9,7 +9,7 @@ import {
   SidebarContent,
   SidebarMenuButton
 } from '@/components/ui/sidebar';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ProjectFile, Language } from '@/lib/types';
 import { Badge } from './ui/badge';
 
@@ -49,22 +49,23 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
   const groupedFiles = files.reduce((acc, file) => {
     (acc[file.language] = acc[file.language] || []).push(file);
     return acc;
-  }, {} as Record<string, ProjectFile[]>);
+  }, {} as Record<Language, ProjectFile[]>);
 
   const languageOrder: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
   
   const activeFile = files.find(f => f.id === activeFileId);
-  const activeLanguage = activeFile?.language;
-
-  const [openAccordion, setOpenAccordion] = useState<string | undefined>(
-    activeLanguage ? `${activeLanguage} Files` : undefined
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(
+    activeFile?.language || (Object.keys(groupedFiles).length > 0 ? Object.keys(groupedFiles)[0] as Language : 'C++')
   );
-  
+
   useEffect(() => {
-    if (activeLanguage) {
-      setOpenAccordion(`${activeLanguage} Files`);
+    if (activeFile) {
+      setSelectedLanguage(activeFile.language);
     }
-  }, [activeLanguage]);
+  }, [activeFile]);
+
+  const availableLanguages = languageOrder.filter(lang => groupedFiles[lang]?.length > 0);
+  const filesForSelectedLanguage = groupedFiles[selectedLanguage] || [];
 
   return (
     <>
@@ -74,39 +75,35 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
             <span className="text-lg font-semibold">CodeSync Edit</span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="p-0">
-        <Accordion type="single" collapsible value={openAccordion || ""} onValueChange={setOpenAccordion} className="w-full">
-            {languageOrder.map(language => {
-              const languageFiles = groupedFiles[language];
-              if (!languageFiles || languageFiles.length === 0) return null;
-              
-              const accordionValue = `${language} Files`;
-              return (
-                <AccordionItem value={accordionValue} key={language} className="border-b border-sidebar-border last:border-b-0">
-                  <AccordionTrigger className="p-4 text-sm font-semibold hover:no-underline hover:bg-sidebar-accent [&[data-state=open]]:bg-sidebar-accent">
-                      {language}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <SidebarMenu className="px-2 pt-0 pb-2">
-                        {languageFiles.map(file => (
-                            <SidebarMenuItem key={file.id}>
-                            <SidebarMenuButton
-                                onClick={() => onFileSelect(file.id)}
-                                isActive={activeFileId === file.id}
-                                tooltip={file.name}
-                            >
-                                <LanguageIcon language={file.language} />
-                                <span>{file.name}</span>
-                                <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
-                            </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        ))}
-                    </SidebarMenu>
-                  </AccordionContent>
-                </AccordionItem>
-              )
-            })}
-        </Accordion>
+      <SidebarContent className="p-2 flex flex-col">
+        <div className="px-2 pb-2">
+          <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as Language)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a language" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableLanguages.map(language => (
+                <SelectItem key={language} value={language}>{language}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <SidebarMenu className="px-2 flex-1 overflow-y-auto">
+            {filesForSelectedLanguage.map(file => (
+                <SidebarMenuItem key={file.id}>
+                <SidebarMenuButton
+                    onClick={() => onFileSelect(file.id)}
+                    isActive={activeFileId === file.id}
+                    tooltip={file.name}
+                >
+                    <LanguageIcon language={file.language} />
+                    <span>{file.name}</span>
+                    <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+        </SidebarMenu>
       </SidebarContent>
     </>
   );
