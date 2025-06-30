@@ -14,13 +14,14 @@ import {z} from 'genkit';
 const ExecuteCodeInputSchema = z.object({
   code: z.string().describe('The code block to be executed.'),
   language: z.string().describe('The programming language of the code (e.g., C++, React Native, Python).'),
-  previousTranscript: z.string().optional().describe('The existing transcript of the execution session.'),
+  previousTranscript: z.string().optional().describe('The existing transcript of the execution session, including any prior user input.'),
   userInput: z.string().optional().describe("The new line of input from the user to the program."),
 });
 export type ExecuteCodeInput = z.infer<typeof ExecuteCodeInputSchema>;
 
 const ExecuteCodeOutputSchema = z.object({
-  output: z.string().describe('The simulated output of the code execution.'),
+  output: z.string().describe("The program's output to stdout."),
+  isWaitingForInput: z.boolean().describe('Set to true if the program has paused and is waiting for the user to provide stdin.'),
 });
 export type ExecuteCodeOutput = z.infer<typeof ExecuteCodeOutputSchema>;
 
@@ -34,59 +35,48 @@ const prompt = ai.definePrompt({
   name: 'executeCodePrompt',
   input: {schema: ExecuteCodeInputSchema},
   output: {schema: ExecuteCodeOutputSchema},
-  prompt: `You are a code execution simulator that perfectly mimics a standard input/output terminal.
+  prompt: `You are a code execution simulator that perfectly mimics a standard interactive terminal. Your response MUST be in JSON format matching the provided schema.
 
 {{#if userInput}}
-You will be given a block of code, the previous terminal transcript, and a new line of user input.
-Your task is to continue the simulation as if the user just typed their input and pressed Enter.
+You are given a block of code, the previous terminal transcript (which includes the user's latest input), and that same line of user input again for context.
+Your task is to continue the simulation.
 
 **Instructions:**
-- Your response ("output") MUST be the user's input echoed back, followed by a newline, and then any new output the program would print to the console (stdout).
-- If the program waits for the next input without printing anything new, your response should just be the user's input followed by a newline and then nothing else.
-- If the program prints a newline, include it.
-
-**Example:**
-Previous Transcript:
-\`\`\`
-Enter your name: 
-\`\`\`
-User Input (stdin):
-\`\`\`
-John
-\`\`\`
-Your "output" field should contain:
-John
-Hello, John!
-Enter your age: 
+1.  Determine the new output the program would print to \`stdout\` after receiving the user's input.
+2.  Set the \`output\` field in your JSON response to this new program output. DO NOT echo the user's input back, as it is already in the transcript.
+3.  Determine if the program is now waiting for another line of user input.
+4.  Set the \`isWaitingForInput\` field to \`true\` if it is waiting, and \`false\` if the program has terminated or is continuing without waiting.
 
 **Current State**
 
-**Previous Transcript:**
+Code:
+\`\`\`{{{language}}}
+{{{code}}}
+\`\`\`
+Previous Transcript (includes the latest user input):
 \`\`\`
 {{{previousTranscript}}}
 \`\`\`
-
-**User Input (stdin):**
+User's Last Input (for context, do not repeat in output):
 \`\`\`
 {{{userInput}}}
 \`\`\`
 
-**Your Response (echoed input + new program output):**
 {{else}}
-Your task is to simulate the initial execution of this code and provide the output it would generate.
+You are simulating the initial execution of a piece of code.
 
-- For languages that produce console output (like C++, Python, JavaScript, Java, Go, etc.), provide the standard console output. If the program expects user input, stop and wait for it. Your output should end right before the user would type. For example, end with "Enter your name: " and not "Enter your name: John".
-- For UI languages like React Native, describe the UI that would be rendered in a textual format. Do not provide code, just a description of the visual elements.
-- For server applications (like Node.js or a web server in another language), simulate the server starting up. Provide the console output, and then describe how a user could interact with it (e.g., "You could now open a browser and navigate to http://... to see the 'Hello, World!' response.").
+**Instructions:**
+1.  Simulate the program's execution from the beginning.
+2.  Set the \`output\` field in your JSON response to whatever the program prints to \`stdout\`.
+3.  If the program runs to completion without requiring input, set \`isWaitingForInput\` to \`false\`.
+4.  If the program stops to wait for user input (e.g., using \`cin\`, \`input()\`, etc.), the \`output\` field should contain everything printed *before* the program waits, and you MUST set \`isWaitingForInput\` to \`true\`.
 
-Programming Language: {{{language}}}
+**Example:** If the code is \`input("Enter name: ")\`, your JSON response should be \`{"output": "Enter name: ", "isWaitingForInput": true}\`.
 
-Code:
-\`\`\`
+**Code to Execute:**
+\`\`\`{{{language}}}
 {{{code}}}
 \`\`\`
-
-Simulated Output:
 {{/if}}`,
 });
 

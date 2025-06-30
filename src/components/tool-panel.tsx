@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements';
 import { chatWithCode } from '@/ai/flows/chat-with-code';
-import type { ProjectItem, DbVersion, Language } from '@/lib/types';
+import type { ProjectItem, DbVersion } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
@@ -22,12 +22,25 @@ interface ToolPanelProps {
   isExecuting: boolean;
   executionOutput: string;
   onExecutionInput: (input: string) => void;
+  isWaitingForInput: boolean;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onCodeUpdate: (newCode: string) => void;
 }
 
-export function ToolPanel({ file, content, history, onRevert, isExecuting, executionOutput, onExecutionInput, activeTab, onTabChange, onCodeUpdate }: ToolPanelProps) {
+export function ToolPanel({
+  file,
+  content,
+  history,
+  onRevert,
+  isExecuting,
+  executionOutput,
+  onExecutionInput,
+  isWaitingForInput,
+  activeTab,
+  onTabChange,
+  onCodeUpdate,
+}: ToolPanelProps) {
   const [improvements, setImprovements] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -39,10 +52,9 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
   const [executionInput, setExecutionInput] = useState('');
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const interactiveLanguages: (Language | null)[] = ['C++', 'Python', 'Java', 'Go', 'Node.js'];
-  const showInput = interactiveLanguages.includes(file?.language || null) && !!executionOutput && !isExecuting;
+  const showInput = isWaitingForInput && !isExecuting;
 
   useEffect(() => {
     // Reset chat when file changes
@@ -51,20 +63,18 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-        // The viewport is the scrollable element in ShadCN's ScrollArea
         const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
         if (viewport) {
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [executionOutput]);
+  }, [executionOutput, executionInput]);
 
   useEffect(() => {
-    // Focus the input when it appears or when the tab becomes active and input is possible
-    if (activeTab === 'output' && showInput) {
-        inputRef.current?.focus();
+    if (showInput && activeTab === 'output') {
+      inputRef.current?.focus();
     }
-  }, [showInput, activeTab, executionOutput]);
+  }, [showInput, activeTab]);
 
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
@@ -115,7 +125,7 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
 
   const handleSendExecutionInput = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!executionInput.trim() || isExecuting) return;
+    if (isExecuting) return;
     onExecutionInput(executionInput);
     setExecutionInput('');
   };
@@ -145,43 +155,37 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
           </TabsList>
           
           <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-            {isExecuting && !executionOutput ? (
+            {isExecuting && !executionOutput && !showInput ? (
               <div className="flex items-center text-sm text-muted-foreground p-4">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Executing code...
               </div>
-            ) : executionOutput ? (
+            ) : executionOutput || showInput ? (
               <>
                 <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
                 <ScrollArea className="flex-1 -mx-1 px-1" ref={scrollAreaRef}>
-                    <div 
-                      className="rounded-md bg-secondary p-4 font-code text-sm h-full cursor-text" 
-                      onClick={() => inputRef.current?.focus()}
-                    >
-                        <pre className="whitespace-pre-wrap">{executionOutput}</pre>
-                        {isExecuting && (
-                            <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
-                        )}
-                        {showInput && (
-                          <form onSubmit={handleSendExecutionInput} className="flex items-center gap-1.5">
-                            <span className="text-muted-foreground">&gt;</span>
-                            <Textarea
-                              ref={inputRef}
-                              value={executionInput}
-                              onChange={(e) => setExecutionInput(e.target.value)}
-                              placeholder=""
-                              className="flex-1 resize-none bg-transparent p-0 border-0 focus-visible:ring-0 focus:outline-none shadow-none font-code text-sm h-auto"
-                              rows={1}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleSendExecutionInput(e as any);
-                                }
-                              }}
-                            />
-                          </form>
-                        )}
-                    </div>
+                  <div
+                    className="rounded-md bg-secondary p-4 font-code text-sm h-full cursor-text"
+                    onClick={() => inputRef.current?.focus()}
+                  >
+                    <pre className="whitespace-pre-wrap">
+                      <span>{executionOutput}</span>
+                      {showInput && (
+                        <form onSubmit={handleSendExecutionInput} className="inline">
+                          <input
+                            ref={inputRef}
+                            value={executionInput}
+                            onChange={(e) => setExecutionInput(e.target.value)}
+                            className="bg-transparent border-0 focus:outline-none focus:ring-0 p-0 ml-1 font-code text-sm w-auto"
+                            autoComplete="off"
+                            autoFocus
+                            spellCheck="false"
+                          />
+                        </form>
+                      )}
+                      {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
+                    </pre>
+                  </div>
                 </ScrollArea>
               </>
             ) : (

@@ -29,6 +29,7 @@ export function EditorLayout() {
 
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionTranscript, setExecutionTranscript] = useState('');
+  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [activeToolTab, setActiveToolTab] = useState('improvements');
   
   useEffect(() => {
@@ -49,6 +50,7 @@ export function EditorLayout() {
     let stale = false;
     if (activeFileId) {
       setExecutionTranscript('');
+      setIsWaitingForInput(false);
       db.fileContents.get(activeFileId).then(fileContent => {
         if (!stale && fileContent) {
           setCurrentContent(fileContent.content);
@@ -75,6 +77,7 @@ export function EditorLayout() {
     if (item?.itemType === 'file') {
       setActiveFileId(id);
       setExecutionTranscript('');
+      setIsWaitingForInput(false);
       setActiveToolTab('improvements');
     }
   }, [allItems]);
@@ -127,12 +130,14 @@ export function EditorLayout() {
 
     setIsExecuting(true);
     setExecutionTranscript('');
+    setIsWaitingForInput(false);
     setActiveToolTab('output');
 
     try {
       const result = await executeCode({ code: currentContent, language: activeFile.language });
-      if (result && typeof result.output === 'string') {
+      if (result) {
         setExecutionTranscript(result.output);
+        setIsWaitingForInput(result.isWaitingForInput);
       } else {
         throw new Error("The AI returned an invalid or empty response.");
       }
@@ -141,6 +146,7 @@ export function EditorLayout() {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
       setExecutionTranscript(`An error occurred during execution: ${errorMessage}`);
+      setIsWaitingForInput(false);
     } finally {
       setIsExecuting(false);
     }
@@ -150,17 +156,22 @@ export function EditorLayout() {
     if (!activeFile || !activeFile.language || !input.trim()) return;
 
     setIsExecuting(true);
+    setIsWaitingForInput(false);
+
+    const newTranscriptWithInput = executionTranscript + input + '\n';
+    setExecutionTranscript(newTranscriptWithInput);
     
     try {
         const result = await executeCode({
             code: currentContent,
             language: activeFile.language,
-            previousTranscript: executionTranscript,
+            previousTranscript: newTranscriptWithInput,
             userInput: input,
         });
 
-        if (result && typeof result.output === 'string') {
+        if (result) {
             setExecutionTranscript(prev => prev + result.output);
+            setIsWaitingForInput(result.isWaitingForInput);
         } else {
             throw new Error("The AI returned an invalid or empty response.");
         }
@@ -169,6 +180,7 @@ export function EditorLayout() {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
         setExecutionTranscript(prev => prev + `\nAn error occurred during execution: ${errorMessage}`);
+        setIsWaitingForInput(false);
     } finally {
         setIsExecuting(false);
     }
@@ -290,6 +302,7 @@ export function EditorLayout() {
                 isExecuting={isExecuting}
                 executionOutput={executionTranscript}
                 onExecutionInput={handleExecutionInput}
+                isWaitingForInput={isWaitingForInput}
                 activeTab={activeToolTab}
                 onTabChange={setActiveToolTab}
                 onCodeUpdate={handleCodeUpdate}
