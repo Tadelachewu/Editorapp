@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -32,6 +32,7 @@ export function EditorLayout() {
   const [executionTranscript, setExecutionTranscript] = useState<string | null>(null);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [activeToolTab, setActiveToolTab] = useState('improvements');
+  const executionController = useRef({ abort: false });
   
   useEffect(() => {
     if (allItems && allItems.length > 0) {
@@ -50,8 +51,12 @@ export function EditorLayout() {
   useEffect(() => {
     let stale = false;
     if (activeFileId) {
-      setExecutionTranscript(null);
+      // Stop any running execution when the file changes
+      executionController.current.abort = true;
+      setIsExecuting(false);
       setIsWaitingForInput(false);
+      setExecutionTranscript(null);
+      
       db.fileContents.get(activeFileId).then(fileContent => {
         if (!stale && fileContent) {
           setCurrentContent(fileContent.content);
@@ -62,7 +67,10 @@ export function EditorLayout() {
     } else {
       setCurrentContent('');
     }
-    return () => { stale = true; };
+    return () => { 
+      stale = true; 
+      executionController.current.abort = true;
+    };
   }, [activeFileId]);
 
   const activeFile = allItems?.find(f => f.id === activeFileId);
@@ -77,8 +85,6 @@ export function EditorLayout() {
     const item = allItems?.find(i => i.id === id);
     if (item?.itemType === 'file') {
       setActiveFileId(id);
-      setExecutionTranscript(null);
-      setIsWaitingForInput(false);
       setActiveToolTab('improvements');
     }
   }, [allItems]);
@@ -126,78 +132,83 @@ export function EditorLayout() {
     }
   }, [activeFileId, activeFile?.name, toast]);
 
-  const handleRun = useCallback(async () => {
-    if (!activeFile || !activeFile.language) return;
+  const runExecutionLoop = useCallback(async (code: string, language: Language, transcript: string) => {
+    if (executionController.current.abort) {
+        setIsExecuting(false);
+        setExecutionTranscript(prev => (prev || '') + "\n[Execution stopped by user]");
+        return;
+    }
+
+    try {
+        const result = await executeCode({
+            code,
+            language,
+            previousTranscript: transcript,
+        });
+
+        if (executionController.current.abort) {
+            setIsExecuting(false);
+            setExecutionTranscript(prev => (prev || '') + "\n[Execution stopped by user]");
+            return;
+        }
+
+        if (result && typeof result.output === 'string') {
+            const newTranscript = transcript + result.output;
+            setExecutionTranscript(newTranscript);
+
+            if (result.isWaitingForInput) {
+                setIsWaitingForInput(true);
+                setIsExecuting(false); // Pause execution, wait for user input
+            } else if (result.hasMoreOutput) {
+                setTimeout(() => runExecutionLoop(code, language, newTranscript), 200);
+            } else {
+                setIsExecuting(false);
+                if (newTranscript.trim() === '') {
+                    setExecutionTranscript("[Program finished with no output]");
+                } else {
+                    setExecutionTranscript(prev => (prev || '') + "\n[Program finished]");
+                }
+            }
+        } else {
+            throw new Error("Execution failed: The AI returned an invalid response.");
+        }
+    } catch (error) {
+        console.error("Execution Error: ", error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during execution.";
+        setExecutionTranscript(prev => (prev || '') + `\nExecution Error: ${errorMessage}`);
+        toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
+        setIsExecuting(false);
+    }
+  }, [toast]);
+
+  const handleRun = useCallback(() => {
+    if (!activeFile || !activeFile.language || isExecuting) return;
 
     setActiveToolTab('output');
     setIsExecuting(true);
-    setExecutionTranscript(null);
+    setExecutionTranscript('');
     setIsWaitingForInput(false);
+    executionController.current.abort = false;
 
-    try {
-      const result = await executeCode({ code: currentContent, language: activeFile.language });
-      
-      if (result && typeof result.output === 'string') {
-        if (result.output === "" && !result.isWaitingForInput) {
-            setExecutionTranscript("[Program finished with no output]");
-        } else {
-            setExecutionTranscript(result.output);
-        }
-        setIsWaitingForInput(result.isWaitingForInput || false);
-      } else {
-        console.error("Execution Error: AI returned invalid data", result);
-        const errorMessage = "Execution failed: The AI returned an invalid response.";
-        setExecutionTranscript(errorMessage);
-        setIsWaitingForInput(false);
-        toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-      }
-    } catch (error) {
-      console.error("Execution Error: ", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during execution.";
-      setExecutionTranscript(`Execution Error: ${errorMessage}`);
-      setIsWaitingForInput(false);
-      toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-    } finally {
-      setIsExecuting(false);
-    }
-  }, [activeFile, currentContent, toast]);
+    runExecutionLoop(currentContent, activeFile.language, '');
+  }, [activeFile, currentContent, isExecuting, runExecutionLoop]);
+
+  const handleStop = useCallback(() => {
+    executionController.current.abort = true;
+  }, []);
 
   const handleExecutionInput = useCallback(async (input: string) => {
-    if (!activeFile || !activeFile.language || !input.trim()) return;
+    if (!activeFile || !activeFile.language || isExecuting || !input.trim()) return;
 
     setIsExecuting(true);
     setIsWaitingForInput(false);
-
-    const newTranscriptWithInput = (executionTranscript || '') + input + '\n';
-    setExecutionTranscript(newTranscriptWithInput);
+    executionController.current.abort = false;
     
-    try {
-        const result = await executeCode({
-            code: currentContent,
-            language: activeFile.language,
-            previousTranscript: newTranscriptWithInput,
-            userInput: input,
-        });
-
-        if (result && typeof result.output === 'string') {
-            setExecutionTranscript(prev => (prev || '') + result.output);
-            setIsWaitingForInput(result.isWaitingForInput || false);
-        } else {
-            const errorMessage = "The AI returned an invalid response while waiting for input.";
-            setExecutionTranscript(prev => (prev || '') + `\nExecution Error: ${errorMessage}`);
-            setIsWaitingForInput(false);
-            toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-        }
-    } catch (error) {
-        console.error(error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-        setExecutionTranscript(prev => (prev || '') + `\nAn error occurred during execution: ${errorMessage}`);
-        setIsWaitingForInput(false);
-    } finally {
-        setIsExecuting(false);
-    }
-  }, [activeFile, currentContent, executionTranscript, toast]);
+    const newTranscript = (executionTranscript || '') + input + '\n';
+    setExecutionTranscript(newTranscript);
+    
+    runExecutionLoop(currentContent, activeFile.language, newTranscript);
+  }, [activeFile, currentContent, executionTranscript, isExecuting, runExecutionLoop]);
 
 
   const openNewItemDialog = (parentId: string | null) => {
@@ -324,6 +335,8 @@ export function EditorLayout() {
                 onContentChange={handleContentChange}
                 onSave={handleSave}
                 onRun={handleRun}
+                isExecuting={isExecuting || isWaitingForInput}
+                onStop={handleStop}
               />
             </div>
             <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2">

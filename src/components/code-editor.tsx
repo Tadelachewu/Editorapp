@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { ProjectItem, Language } from '@/lib/types';
-import { Save, Play } from 'lucide-react';
+import { Save, Play, StopCircle } from 'lucide-react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
 import type * as monaco from 'monaco-editor';
@@ -15,6 +15,8 @@ interface CodeEditorProps {
   onContentChange: (content: string) => void;
   onSave: () => void;
   onRun: () => void;
+  isExecuting: boolean;
+  onStop: () => void;
 }
 
 const languageMap: Record<Language, string> = {
@@ -28,7 +30,7 @@ const languageMap: Record<Language, string> = {
   'Web': 'html',
 };
 
-export function CodeEditor({ file, content, onContentChange, onSave, onRun }: CodeEditorProps) {
+export function CodeEditor({ file, content, onContentChange, onSave, onRun, isExecuting, onStop }: CodeEditorProps) {
   const monacoInstance = useMonaco();
 
   useEffect(() => {
@@ -89,10 +91,17 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
           <CardDescription>Language: {file.language}</CardDescription>
         </div>
         <div className="flex items-center gap-2">
-            <Button onClick={onRun} size="sm" variant="outline">
-                <Play className="mr-2 h-4 w-4" />
-                Run
-            </Button>
+            {isExecuting ? (
+              <Button onClick={onStop} size="sm" variant="destructive">
+                  <StopCircle className="mr-2 h-4 w-4" />
+                  Stop
+              </Button>
+            ) : (
+              <Button onClick={onRun} size="sm" variant="outline">
+                  <Play className="mr-2 h-4 w-4" />
+                  Run
+              </Button>
+            )}
             <Button onClick={onSave} size="sm">
                 <Save className="mr-2 h-4 w-4" />
                 Save
