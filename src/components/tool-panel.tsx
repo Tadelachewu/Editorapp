@@ -165,7 +165,7 @@ export function ToolPanel({
                 <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
                 <ScrollArea className="flex-1 -mx-1 px-1" ref={scrollAreaRef}>
                   <div
-                    className="rounded-md bg-secondary p-4 font-code text-sm h-full cursor-text"
+                    className="rounded-md border bg-card p-4 font-code text-sm h-full cursor-text"
                     onClick={() => inputRef.current?.focus()}
                   >
                     <pre className="whitespace-pre-wrap">
