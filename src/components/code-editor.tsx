@@ -24,6 +24,8 @@ const languageMap: Record<Language, string> = {
   'JavaScript': 'javascript',
   'Java': 'java',
   'Go': 'go',
+  'Node.js': 'javascript',
+  'Web': 'html',
 };
 
 export function CodeEditor({ file, content, onContentChange, onSave, onRun }: CodeEditorProps) {

@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const CodeCompletionInputSchema = z.object({
   codeSnippet: z.string().describe('The current code snippet the user is working on.'),
-  fileType: z.enum(['cpp', 'rn', 'py', 'js', 'java', 'go']).describe('The file type of the code snippet (cpp for C++, rn for React Native, py for Python, js for JavaScript, java for Java, go for Go).'),
+  fileType: z.enum(['cpp', 'rn', 'py', 'js', 'java', 'go', 'html']).describe('The file type of the code snippet (cpp for C++, rn for React Native, py for Python, js for JavaScript, java for Java, go for Go, html for Web).'),
 });
 export type CodeCompletionInput = z.infer<typeof CodeCompletionInputSchema>;
 

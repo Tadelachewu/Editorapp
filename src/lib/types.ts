@@ -1,6 +1,6 @@
-export type FileType = 'cpp' | 'rn' | 'py' | 'js' | 'java' | 'go';
+export type FileType = 'cpp' | 'rn' | 'py' | 'js' | 'java' | 'go' | 'html';
 
-export type Language = 'C++' | 'React Native' | 'Python' | 'JavaScript' | 'Java' | 'Go';
+export type Language = 'C++' | 'React Native' | 'Python' | 'JavaScript' | 'Java' | 'Go' | 'Node.js' | 'Web';
 
 export type ProjectItem = {
   id: string;

@@ -8,6 +8,8 @@ export const initialItems: ProjectItem[] = [
   { id: 'folder-js', name: 'JavaScript Snippets', parentId: null, itemType: 'folder', fileType: null, language: null },
   { id: 'folder-java', name: 'Java Examples', parentId: null, itemType: 'folder', fileType: null, language: null },
   { id: 'folder-go', name: 'Go Programs', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-nodejs', name: 'Node.js Projects', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-web', name: 'Web Projects', parentId: null, itemType: 'folder', fileType: null, language: null },
 
   // Files
   { id: '1', name: 'main.cpp', parentId: 'folder-cpp', itemType: 'file', fileType: 'cpp', language: 'C++' },
@@ -18,9 +20,11 @@ export const initialItems: ProjectItem[] = [
   { id: '6', name: 'app.js', parentId: 'folder-js', itemType: 'file', fileType: 'js', language: 'JavaScript' },
   { id: '7', name: 'Main.java', parentId: 'folder-java', itemType: 'file', fileType: 'java', language: 'Java' },
   { id: '8', name: 'main.go', parentId: 'folder-go', itemType: 'file', fileType: 'go', language: 'Go' },
+  { id: '9', name: 'server.js', parentId: 'folder-nodejs', itemType: 'file', fileType: 'js', language: 'Node.js' },
+  { id: '10', name: 'index.html', parentId: 'folder-web', itemType: 'file', fileType: 'html', language: 'Web' },
 ];
 
-export const languages: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
+export const languages: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go', 'Node.js', 'Web'];
 
 export const fileTypesByLanguage: Record<Language, FileType> = {
   'C++': 'cpp',
@@ -29,6 +33,8 @@ export const fileTypesByLanguage: Record<Language, FileType> = {
   'JavaScript': 'js',
   'Java': 'java',
   'Go': 'go',
+  'Node.js': 'js',
+  'Web': 'html',
 };
 
 const cppMainContent = `#include <iostream>
@@ -114,6 +120,52 @@ func main() {
     fmt.Println("Hello, Go!")
 }`;
 
+const nodeServerContent = `const http = require('http');
+
+const hostname = '127.0.0.1';
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello, Node.js!');
+});
+
+server.listen(port, hostname, () => {
+  console.log(\`Server running at http://\${hostname}:\${port}/\`);
+});`;
+
+const webIndexContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Web</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="greeting">Hello, Web!</h1>
+    <script>
+        document.getElementById('greeting').addEventListener('click', () => {
+            alert('You clicked the heading!');
+        });
+    </script>
+</body>
+</html>`;
+
 
 export const initialContent: FileContentStore = {
   '1': cppMainContent,
@@ -124,6 +176,8 @@ export const initialContent: FileContentStore = {
   '6': jsContent,
   '7': javaContent,
   '8': goContent,
+  '9': nodeServerContent,
+  '10': webIndexContent,
 };
 
 export const fileTemplates: Record<Language, string> = {
@@ -174,6 +228,43 @@ import "fmt"
 func main() {
     fmt.Println("New Go file!")
 }`,
+  'Node.js': `const http = require('http');
+
+const hostname = '127.0.0.1';
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello from new Node.js server!');
+});
+
+server.listen(port, hostname, () => {
+  console.log(\`Server running at http://\${hostname}:\${port}/\`);
+});`,
+  'Web': `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Web Page</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>New Web Page</h1>
+    <script>
+        console.log('Hello from new web page!');
+    </script>
+</body>
+</html>`,
 };
 
 export const initialHistorySeed: Record<string, { content: string; timestamp: Date }[]> = {
@@ -185,4 +276,6 @@ export const initialHistorySeed: Record<string, { content: string; timestamp: Da
   '6': [{ content: jsContent, timestamp: new Date() }],
   '7': [{ content: javaContent, timestamp: new Date() }],
   '8': [{ content: goContent, timestamp: new Date() }],
+  '9': [{ content: nodeServerContent, timestamp: new Date() }],
+  '10': [{ content: webIndexContent, timestamp: new Date() }],
 };
