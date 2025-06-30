@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Code, PlusCircle, Trash2 } from 'lucide-react';
+import { Code, PlusCircle, Trash2, Folder } from 'lucide-react';
 import {
   SidebarHeader,
   SidebarMenu,
@@ -24,6 +24,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from './ui/skeleton';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 
 interface ProjectManagerProps {
@@ -103,45 +109,55 @@ export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, o
                     <Button variant="link" onClick={onNewFile}>Create a new file</Button>
                 </div>
             ) : (
-            languageOrder.map(language => {
-              const langFiles = groupedFiles[language];
-              if (!langFiles || langFiles.length === 0) return null;
+            <Accordion type="multiple" defaultValue={languageOrder} className="w-full">
+              {languageOrder.map(language => {
+                const langFiles = groupedFiles[language];
+                if (!langFiles || langFiles.length === 0) return null;
 
-              return (
-                <div key={language} className="py-2">
-                  <h3 className="px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{language}</h3>
-                  <div className="flex flex-col gap-1">
-                    {langFiles.map(file => (
-                        <SidebarMenuItem key={file.id}>
-                          <div className="relative flex w-full">
-                            <SidebarMenuButton
-                                onClick={() => onFileSelect(file.id)}
-                                isActive={activeFileId === file.id}
-                                tooltip={file.name}
-                                className="group w-full"
-                            >
-                                <LanguageIcon language={file.language} />
-                                <span className="flex-1 truncate">{file.name}</span>
-                                <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
-                            </SidebarMenuButton>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteCandidate(file.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </SidebarMenuItem>
-                    ))}
-                  </div>
-                </div>
-              )
-            }))}
+                return (
+                  <AccordionItem value={language} key={language} className="border-b-0">
+                    <AccordionTrigger className="px-2 py-1.5 hover:no-underline hover:bg-accent rounded-md text-sm">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Folder className="w-4 h-4" />
+                        <span>{language}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-1 pl-4 pb-0">
+                      <div className="flex flex-col gap-1">
+                        {langFiles.map(file => (
+                            <SidebarMenuItem key={file.id}>
+                              <div className="relative flex w-full">
+                                <SidebarMenuButton
+                                    onClick={() => onFileSelect(file.id)}
+                                    isActive={activeFileId === file.id}
+                                    tooltip={file.name}
+                                    className="group w-full"
+                                >
+                                    <LanguageIcon language={file.language} />
+                                    <span className="flex-1 truncate">{file.name}</span>
+                                    <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
+                                </SidebarMenuButton>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteCandidate(file.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </SidebarMenuItem>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )
+              })}
+          </Accordion>
+          )}
         </SidebarMenu>
       </SidebarContent>
 
