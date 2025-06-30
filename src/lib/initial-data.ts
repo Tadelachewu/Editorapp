@@ -1,14 +1,23 @@
 import type { ProjectItem, FileContentStore, Language, FileType } from './types';
 
 export const initialItems: ProjectItem[] = [
-  { id: '1', name: 'main.cpp', parentId: null, itemType: 'file', fileType: 'cpp', language: 'C++' },
-  { id: '2', name: 'App.tsx', parentId: null, itemType: 'file', fileType: 'rn', language: 'React Native' },
-  { id: '3', name: 'utils.h', parentId: null, itemType: 'file', fileType: 'cpp', language: 'C++' },
-  { id: '4', name: 'Button.tsx', parentId: null, itemType: 'file', fileType: 'rn', language: 'React Native' },
-  { id: '5', name: 'main.py', parentId: null, itemType: 'file', fileType: 'py', language: 'Python' },
-  { id: '6', name: 'app.js', parentId: null, itemType: 'file', fileType: 'js', language: 'JavaScript' },
-  { id: '7', name: 'Main.java', parentId: null, itemType: 'file', fileType: 'java', language: 'Java' },
-  { id: '8', name: 'main.go', parentId: null, itemType: 'file', fileType: 'go', language: 'Go' },
+  // Folders
+  { id: 'folder-cpp', name: 'C++ Projects', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-rn', name: 'React Native Apps', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-py', name: 'Python Scripts', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-js', name: 'JavaScript Snippets', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-java', name: 'Java Examples', parentId: null, itemType: 'folder', fileType: null, language: null },
+  { id: 'folder-go', name: 'Go Programs', parentId: null, itemType: 'folder', fileType: null, language: null },
+
+  // Files
+  { id: '1', name: 'main.cpp', parentId: 'folder-cpp', itemType: 'file', fileType: 'cpp', language: 'C++' },
+  { id: '2', name: 'App.tsx', parentId: 'folder-rn', itemType: 'file', fileType: 'rn', language: 'React Native' },
+  { id: '3', name: 'utils.h', parentId: 'folder-cpp', itemType: 'file', fileType: 'cpp', language: 'C++' },
+  { id: '4', name: 'Button.tsx', parentId: 'folder-rn', itemType: 'file', fileType: 'rn', language: 'React Native' },
+  { id: '5', name: 'main.py', parentId: 'folder-py', itemType: 'file', fileType: 'py', language: 'Python' },
+  { id: '6', name: 'app.js', parentId: 'folder-js', itemType: 'file', fileType: 'js', language: 'JavaScript' },
+  { id: '7', name: 'Main.java', parentId: 'folder-java', itemType: 'file', fileType: 'java', language: 'Java' },
+  { id: '8', name: 'main.go', parentId: 'folder-go', itemType: 'file', fileType: 'go', language: 'Go' },
 ];
 
 export const languages: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
