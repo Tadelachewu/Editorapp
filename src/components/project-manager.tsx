@@ -1,15 +1,15 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Code, FileCode2 } from 'lucide-react';
 import {
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarContent,
-  SidebarGroupLabel,
-  SidebarGroup
+  SidebarMenuButton
 } from '@/components/ui/sidebar';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { ProjectFile, Language } from '@/lib/types';
 import { Badge } from './ui/badge';
 
@@ -52,6 +52,19 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
   }, {} as Record<string, ProjectFile[]>);
 
   const languageOrder: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
+  
+  const activeFile = files.find(f => f.id === activeFileId);
+  const activeLanguage = activeFile?.language;
+
+  const [openAccordion, setOpenAccordion] = useState<string | undefined>(
+    activeLanguage ? `${activeLanguage} Files` : undefined
+  );
+  
+  useEffect(() => {
+    if (activeLanguage) {
+      setOpenAccordion(`${activeLanguage} Files`);
+    }
+  }, [activeLanguage]);
 
   return (
     <>
@@ -61,32 +74,39 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
             <span className="text-lg font-semibold">CodeSync Edit</span>
         </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
+      <SidebarContent className="p-0">
+        <Accordion type="single" collapsible value={openAccordion || ""} onValueChange={setOpenAccordion} className="w-full">
             {languageOrder.map(language => {
               const languageFiles = groupedFiles[language];
               if (!languageFiles || languageFiles.length === 0) return null;
               
+              const accordionValue = `${language} Files`;
               return (
-                <SidebarGroup key={language}>
-                    <SidebarGroupLabel>{language} Files</SidebarGroupLabel>
-                    {languageFiles.map(file => (
-                        <SidebarMenuItem key={file.id}>
-                        <SidebarMenuButton
-                            onClick={() => onFileSelect(file.id)}
-                            isActive={activeFileId === file.id}
-                            tooltip={file.name}
-                        >
-                            <LanguageIcon language={file.language} />
-                            <span>{file.name}</span>
-                            <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
-                        </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                </SidebarGroup>
+                <AccordionItem value={accordionValue} key={language} className="border-b border-sidebar-border last:border-b-0">
+                  <AccordionTrigger className="p-4 text-sm font-semibold hover:no-underline hover:bg-sidebar-accent [&[data-state=open]]:bg-sidebar-accent">
+                      {language}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SidebarMenu className="px-2 pt-0 pb-2">
+                        {languageFiles.map(file => (
+                            <SidebarMenuItem key={file.id}>
+                            <SidebarMenuButton
+                                onClick={() => onFileSelect(file.id)}
+                                isActive={activeFileId === file.id}
+                                tooltip={file.name}
+                            >
+                                <LanguageIcon language={file.language} />
+                                <span>{file.name}</span>
+                                <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
+                            </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                  </AccordionContent>
+                </AccordionItem>
               )
             })}
-        </SidebarMenu>
+        </Accordion>
       </SidebarContent>
     </>
   );
