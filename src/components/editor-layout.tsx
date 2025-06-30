@@ -8,6 +8,7 @@ import { ToolPanel } from '@/components/tool-panel';
 import { initialFiles, initialContent, initialHistory } from '@/lib/initial-data';
 import type { FileContentStore, FileHistoryStore, Version } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import { executeCode } from '@/ai/flows/execute-code';
 
 export function EditorLayout() {
   const { toast } = useToast();
@@ -16,12 +17,18 @@ export function EditorLayout() {
   const [fileContents, setFileContents] = useState<FileContentStore>(initialContent);
   const [fileHistories, setFileHistories] = useState<FileHistoryStore>(initialHistory);
 
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionOutput, setExecutionOutput] = useState('');
+  const [activeToolTab, setActiveToolTab] = useState('improvements');
+
   const activeFile = files.find(f => f.id === activeFileId);
   const activeFileContent = activeFileId ? fileContents[activeFileId] : '';
   const activeFileHistory = activeFileId ? fileHistories[activeFileId] ?? [] : [];
 
   const handleFileSelect = useCallback((id: string) => {
     setActiveFileId(id);
+    setExecutionOutput('');
+    setActiveToolTab('improvements');
   }, []);
 
   const handleContentChange = useCallback((content: string) => {
@@ -61,6 +68,25 @@ export function EditorLayout() {
     }
   }, [activeFileId, fileHistories, activeFile?.name, toast]);
 
+  const handleRun = useCallback(async () => {
+    if (!activeFile) return;
+
+    setIsExecuting(true);
+    setExecutionOutput('');
+    setActiveToolTab('output');
+
+    try {
+      const result = await executeCode({ code: activeFileContent, language: activeFile.language });
+      setExecutionOutput(result.output);
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to execute code." });
+      setExecutionOutput('An error occurred during execution.');
+    } finally {
+      setIsExecuting(false);
+    }
+  }, [activeFile, activeFileContent, toast]);
+
   return (
     <SidebarProvider>
       <div className="flex h-screen bg-background">
@@ -78,6 +104,7 @@ export function EditorLayout() {
                 content={activeFileContent}
                 onContentChange={handleContentChange}
                 onSave={handleSave}
+                onRun={handleRun}
               />
             </div>
             <div className="hidden lg:flex w-1/2 flex-col border-l border-border p-1 sm:p-2 h-full">
@@ -87,6 +114,10 @@ export function EditorLayout() {
                 content={activeFileContent}
                 history={activeFileHistory}
                 onRevert={handleRevert}
+                isExecuting={isExecuting}
+                executionOutput={executionOutput}
+                activeTab={activeToolTab}
+                onTabChange={setActiveToolTab}
               />
             </div>
           </div>

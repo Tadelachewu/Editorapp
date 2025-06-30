@@ -4,16 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import type { ProjectFile } from '@/lib/types';
-import { Save } from 'lucide-react';
+import { Save, Play } from 'lucide-react';
 
 interface CodeEditorProps {
   file: ProjectFile | undefined;
   content: string;
   onContentChange: (content: string) => void;
   onSave: () => void;
+  onRun: () => void;
 }
 
-export function CodeEditor({ file, content, onContentChange, onSave }: CodeEditorProps) {
+export function CodeEditor({ file, content, onContentChange, onSave, onRun }: CodeEditorProps) {
   if (!file) {
     return (
       <Card className="h-full flex items-center justify-center">
@@ -31,10 +32,16 @@ export function CodeEditor({ file, content, onContentChange, onSave }: CodeEdito
           <CardTitle>{file.name}</CardTitle>
           <CardDescription>Language: {file.language}</CardDescription>
         </div>
-        <Button onClick={onSave} size="sm">
-          <Save className="mr-2 h-4 w-4" />
-          Save
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button onClick={onRun} size="sm" variant="outline">
+                <Play className="mr-2 h-4 w-4" />
+                Run
+            </Button>
+            <Button onClick={onSave} size="sm">
+                <Save className="mr-2 h-4 w-4" />
+                Save
+            </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 p-0">
         <Textarea

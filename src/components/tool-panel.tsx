@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Bot, History, List, ShieldAlert, Loader2 } from 'lucide-react';
+import { Bot, History, List, ShieldAlert, Loader2, Terminal } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,9 +17,13 @@ interface ToolPanelProps {
   content: string;
   history: Version[];
   onRevert: (versionId: string) => void;
+  isExecuting: boolean;
+  executionOutput: string;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
-export function ToolPanel({ file, content, history, onRevert }: ToolPanelProps) {
+export function ToolPanel({ file, content, history, onRevert, isExecuting, executionOutput, activeTab, onTabChange }: ToolPanelProps) {
   const [improvements, setImprovements] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,14 +75,29 @@ export function ToolPanel({ file, content, history, onRevert }: ToolPanelProps) 
         <CardTitle>Tools</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="improvements" className="h-full">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs value={activeTab} onValueChange={onTabChange} className="h-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
             <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> AI Improvements</TabsTrigger>
             <TabsTrigger value="suggestions"><List className="w-4 h-4 mr-1" /> AI Suggestions</TabsTrigger>
             <TabsTrigger value="diagnostics"><ShieldAlert className="w-4 h-4 mr-1" /> Diagnostics</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
           <ScrollArea className="h-[calc(100vh-12rem)] mt-4">
+            <TabsContent value="output">
+                {isExecuting ? (
+                    <div className="flex items-center text-sm text-muted-foreground p-4">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Executing code...
+                    </div>
+                ) : executionOutput ? (
+                     <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">{executionOutput}</pre>
+                ) : (
+                    <div className="text-center text-sm text-muted-foreground p-4">
+                        <p>Click the "Run" button in the editor to execute the code and see the output here.</p>
+                    </div>
+                )}
+            </TabsContent>
             <TabsContent value="improvements">
               <Button onClick={handleGenerateImprovements} disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
