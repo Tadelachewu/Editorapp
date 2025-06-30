@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { ProjectFile, Language } from '@/lib/types';
 import { Save, Play } from 'lucide-react';
-import Editor from '@monaco-editor/react';
+import Editor, { useMonaco } from '@monaco-editor/react';
+import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
+import type * as monaco from 'monaco-editor';
 
 interface CodeEditorProps {
   file: ProjectFile | undefined;
@@ -24,6 +27,54 @@ const languageMap: Record<Language, string> = {
 };
 
 export function CodeEditor({ file, content, onContentChange, onSave, onRun }: CodeEditorProps) {
+  const monacoInstance = useMonaco();
+
+  useEffect(() => {
+    if (!monacoInstance || !file) return;
+
+    const monacoLanguage = languageMap[file.language] || 'plaintext';
+
+    const provider = monacoInstance.languages.registerCompletionItemProvider(monacoLanguage, {
+      provideCompletionItems: async (model, position) => {
+        const code = model.getValue();
+        
+        try {
+          const result = await generateCodeSuggestions({
+            codeSnippet: code,
+            fileType: file.type,
+          });
+
+          if (result && result.suggestions) {
+            const word = model.getWordUntilPosition(position);
+            const range = {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: word.startColumn,
+                endColumn: word.endColumn,
+            };
+
+            const suggestions = result.suggestions.map((suggestionText): monaco.languages.CompletionItem => ({
+              label: suggestionText,
+              kind: monacoInstance.languages.CompletionItemKind.Snippet,
+              insertText: suggestionText,
+              documentation: "AI-powered suggestion",
+              range: range,
+            }));
+            return { suggestions };
+          }
+        } catch (error) {
+          console.error('Error fetching AI suggestions:', error);
+        }
+
+        return { suggestions: [] };
+      },
+    });
+
+    return () => {
+      provider.dispose();
+    };
+  }, [monacoInstance, file]);
+
   if (!file) {
     return (
       <Card className="h-full flex items-center justify-center">
@@ -68,6 +119,11 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
             wordWrap: 'on',
             scrollBeyondLastLine: false,
             automaticLayout: true,
+            quickSuggestions: {
+              other: true,
+              comments: true,
+              strings: true,
+            },
           }}
         />
       </CardContent>
