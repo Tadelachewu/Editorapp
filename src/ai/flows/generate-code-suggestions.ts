@@ -18,7 +18,7 @@ const CodeCompletionInputSchema = z.object({
 export type CodeCompletionInput = z.infer<typeof CodeCompletionInputSchema>;
 
 const CodeCompletionOutputSchema = z.object({
-  suggestions: z.array(z.string()).describe('An array of code completion suggestions.'),
+  suggestion: z.string().describe('A single code completion suggestion to complete the current line or block.'),
 });
 export type CodeCompletionOutput = z.infer<typeof CodeCompletionOutputSchema>;
 
@@ -30,18 +30,19 @@ const prompt = ai.definePrompt({
   name: 'codeCompletionPrompt',
   input: {schema: CodeCompletionInputSchema},
   output: {schema: CodeCompletionOutputSchema},
-  prompt: `You are an AI code assistant that suggests code completions.
+  prompt: `You are an AI code assistant that provides a single, high-quality code completion suggestion.
 
-  Based on the given code snippet and file type, provide code completion suggestions.
-  Ensure the suggestions are relevant to the code and file type (C++ or React Native).
+  Based on the given code snippet and file type, provide a single code completion suggestion.
+  The suggestion should complete the current line or block of code.
+  Do not repeat the existing code in your suggestion. Only provide the new code to be added.
 
   Code Snippet:
-  {{codeSnippet}}
+  {{{codeSnippet}}}
 
   File Type:
   {{fileType}}
 
-  Suggestions (as an array of strings):`,
+  Suggestion:`,
 });
 
 const generateCodeSuggestionsFlow = ai.defineFlow(

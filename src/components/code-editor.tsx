@@ -34,8 +34,8 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
 
     const monacoLanguage = languageMap[file.language] || 'plaintext';
 
-    const provider = monacoInstance.languages.registerCompletionItemProvider(monacoLanguage, {
-      provideCompletionItems: async (model, position) => {
+    const provider = monacoInstance.languages.registerInlineCompletionsProvider(monacoLanguage, {
+      provideInlineCompletions: async (model, position) => {
         const code = model.getValue();
         
         try {
@@ -44,30 +44,22 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
             fileType: file.fileType!,
           });
 
-          if (result && result.suggestions) {
-            const word = model.getWordUntilPosition(position);
-            const range = {
-                startLineNumber: position.lineNumber,
-                endLineNumber: position.lineNumber,
-                startColumn: word.startColumn,
-                endColumn: word.endColumn,
+          if (result && result.suggestion) {
+            return {
+              items: [
+                {
+                  insertText: result.suggestion,
+                },
+              ],
             };
-
-            const suggestions = result.suggestions.map((suggestionText): monaco.languages.CompletionItem => ({
-              label: suggestionText,
-              kind: monacoInstance.languages.CompletionItemKind.Snippet,
-              insertText: suggestionText,
-              documentation: "AI-powered suggestion",
-              range: range,
-            }));
-            return { suggestions };
           }
         } catch (error) {
           console.error('Error fetching AI suggestions:', error);
         }
 
-        return { suggestions: [] };
+        return { items: [] };
       },
+      freeInlineCompletions: () => {},
     });
 
     return () => {
@@ -119,11 +111,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
             wordWrap: 'on',
             scrollBeyondLastLine: false,
             automaticLayout: true,
-            quickSuggestions: {
-              other: true,
-              comments: true,
-              strings: true,
-            },
+            inlineSuggest: { enabled: true },
           }}
         />
       </CardContent>
