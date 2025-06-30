@@ -85,18 +85,26 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
           </TabsList>
           <ScrollArea className="h-[calc(100vh-12rem)] mt-4">
             <TabsContent value="output">
-                {isExecuting ? (
-                    <div className="flex items-center text-sm text-muted-foreground p-4">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Executing code...
-                    </div>
-                ) : executionOutput ? (
-                     <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">{executionOutput}</pre>
-                ) : (
-                    <div className="text-center text-sm text-muted-foreground p-4">
-                        <p>Click the "Run" button in the editor to execute the code and see the output here.</p>
-                    </div>
-                )}
+              {isExecuting ? (
+                <div className="flex items-center text-sm text-muted-foreground p-4">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Executing code...
+                </div>
+              ) : executionOutput ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold">Execution Output</h3>
+                  <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">
+                    {executionOutput}
+                  </pre>
+                </div>
+              ) : (
+                <div className="text-center text-sm text-muted-foreground p-4">
+                  <p>
+                    Click the "Run" button in the editor to execute the code and
+                    see the output here.
+                  </p>
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="improvements">
               <Button onClick={handleGenerateImprovements} disabled={isLoading}>
