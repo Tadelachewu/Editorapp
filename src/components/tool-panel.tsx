@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Bot, History, Loader2, Terminal, MessageSquare, User, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,10 +38,33 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
   
   const [executionInput, setExecutionInput] = useState('');
 
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const interactiveLanguages: (Language | null)[] = ['C++', 'Python', 'Java', 'Go', 'Node.js'];
+  const showInput = interactiveLanguages.includes(file?.language || null) && !!executionOutput && !isExecuting;
+
   useEffect(() => {
     // Reset chat when file changes
     setChatMessages([]);
   }, [file?.id]);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        // The viewport is the scrollable element in ShadCN's ScrollArea
+        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+        if (viewport) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
+    }
+  }, [executionOutput]);
+
+  useEffect(() => {
+    // Focus the input when it appears or when the tab becomes active and input is possible
+    if (activeTab === 'output' && showInput) {
+        inputRef.current?.focus();
+    }
+  }, [showInput, activeTab, executionOutput]);
 
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
@@ -92,13 +115,10 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
 
   const handleSendExecutionInput = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!executionInput.trim()) return;
+    if (!executionInput.trim() || isExecuting) return;
     onExecutionInput(executionInput);
     setExecutionInput('');
   };
-
-  const interactiveLanguages: (Language | null)[] = ['C++', 'Python', 'Java', 'Go', 'Node.js'];
-  const showInput = interactiveLanguages.includes(file?.language || null) && !!executionOutput && !isExecuting;
 
   if (!file) {
     return (
@@ -133,35 +153,36 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
             ) : executionOutput ? (
               <>
                 <h3 className="text-sm font-semibold mb-2 px-1">Execution Output</h3>
-                <ScrollArea className="flex-1 -mx-1 px-1">
-                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">
-                        {executionOutput}
+                <ScrollArea className="flex-1 -mx-1 px-1" ref={scrollAreaRef}>
+                    <div 
+                      className="rounded-md bg-secondary p-4 font-code text-sm h-full cursor-text" 
+                      onClick={() => inputRef.current?.focus()}
+                    >
+                        <pre className="whitespace-pre-wrap">{executionOutput}</pre>
                         {isExecuting && (
                             <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
                         )}
-                    </pre>
-                </ScrollArea>
-                {showInput && (
-                    <form onSubmit={handleSendExecutionInput} className="flex items-start gap-2 pt-2 border-t mt-2">
-                        <Textarea
-                            value={executionInput}
-                            onChange={(e) => setExecutionInput(e.target.value)}
-                            placeholder="Enter input..."
-                            className="min-h-[40px] flex-1 resize-none font-code"
-                            rows={1}
-                            onKeyDown={(e) => {
+                        {showInput && (
+                          <form onSubmit={handleSendExecutionInput} className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground">&gt;</span>
+                            <Textarea
+                              ref={inputRef}
+                              value={executionInput}
+                              onChange={(e) => setExecutionInput(e.target.value)}
+                              placeholder=""
+                              className="flex-1 resize-none bg-transparent p-0 border-0 focus-visible:ring-0 focus:outline-none shadow-none font-code text-sm h-auto"
+                              rows={1}
+                              onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSendExecutionInput(e as any);
+                                  e.preventDefault();
+                                  handleSendExecutionInput(e as any);
                                 }
-                            }}
-                            autoFocus
-                        />
-                        <Button type="submit" size="icon" className="h-9 w-9" disabled={isExecuting}>
-                            <Send className="w-4 h-4" />
-                        </Button>
-                    </form>
-                )}
+                              }}
+                            />
+                          </form>
+                        )}
+                    </div>
+                </ScrollArea>
               </>
             ) : (
               <div className="text-center text-sm text-muted-foreground p-4">
