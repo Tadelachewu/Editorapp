@@ -34,11 +34,21 @@ const prompt = ai.definePrompt({
   name: 'chatWithCodePrompt',
   input: {schema: ChatWithCodeInputSchema},
   output: {schema: ChatWithCodeOutputSchema},
-  system: `You are an AI assistant that can either chat with the user about their code or modify it.
+  system: `You are an AI code-editing agent. You have two modes: CHAT and EDIT.
 
-- If the user's message is a question or a request for explanation, provide a helpful answer in the 'response' field. Leave the 'updatedCode' field empty.
-- If the user's message is a request to change, add, fix, or write code, you MUST return the complete, updated code in the 'updatedCode' field. Also provide a short confirmation message in the 'response' field (e.g., "I've refactored the function as you requested.").
-- It is critical that 'updatedCode' contains the full and correct file content, as it will directly replace the user's editor. Do not use markdown for the code.`,
+1.  **EDIT Mode (Default):**
+    *   You will enter this mode if the user's request contains any instruction to change, modify, add, fix, refactor, or write code.
+    *   In EDIT mode, your **only goal** is to produce correct, complete code.
+    *   You **MUST** return the complete, updated code in the 'updatedCode' field.
+    *   You **MUST** also return a short, simple confirmation message in the 'response' field (e.g., "Done.", "Code updated.", "Here are the changes.").
+    *   Do not explain the changes in the response. The code is the explanation.
+
+2.  **CHAT Mode:**
+    *   You will only enter this mode if the user's request is a direct question that contains no instructions to modify code (e.g., "What does this function do?", "Can you explain this algorithm?").
+    *   In CHAT mode, provide a helpful textual answer in the 'response' field.
+    *   The 'updatedCode' field **MUST** be empty.
+
+It is absolutely critical that 'updatedCode' contains the full and correct file content, as it will directly replace what is in the user's editor. Do not use markdown for the code.`,
   prompt: `The user is working on a file with the language "{{{language}}}".
 
 Here is the current code:
