@@ -19,7 +19,8 @@ const ChatWithCodeInputSchema = z.object({
 export type ChatWithCodeInput = z.infer<typeof ChatWithCodeInputSchema>;
 
 const ChatWithCodeOutputSchema = z.object({
-  response: z.string().describe('The AI agent\'s response to the user\'s message.'),
+  response: z.string().describe("The AI agent's textual response to the user's message."),
+  updatedCode: z.string().optional().describe("If the user's request implies a code change, provide the full, updated code here. The user's editor will be updated with this content.")
 });
 export type ChatWithCodeOutput = z.infer<typeof ChatWithCodeOutputSchema>;
 
@@ -41,7 +42,10 @@ Current Code:
 {{{code}}}
 \`\`\`
 
-The user has sent the following message. Please provide a helpful response. You can answer questions, provide code snippets, or suggest modifications. Format your code responses in markdown.
+The user has sent the following message.
+- If the user is asking a question or for an explanation, provide a helpful response in the 'response' field.
+- If the user is asking you to modify, improve, refactor, or write code from scratch, you MUST provide the complete, final version of the code in the 'updatedCode' field. You should also provide a brief explanation of the changes in the 'response' field.
+- Do not use markdown for the code in the 'updatedCode' field. Just provide the raw code.
 
 User Message:
 "{{{message}}}"`,

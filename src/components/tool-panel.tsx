@@ -23,9 +23,10 @@ interface ToolPanelProps {
   executionOutput: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onCodeUpdate: (newCode: string) => void;
 }
 
-export function ToolPanel({ file, content, history, onRevert, isExecuting, executionOutput, activeTab, onTabChange }: ToolPanelProps) {
+export function ToolPanel({ file, content, history, onRevert, isExecuting, executionOutput, activeTab, onTabChange, onCodeUpdate }: ToolPanelProps) {
   const [improvements, setImprovements] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -72,6 +73,10 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
       });
       const assistantMessage = { role: 'assistant' as const, content: result.response };
       setChatMessages(prev => [...prev, assistantMessage]);
+
+      if (result.updatedCode) {
+        onCodeUpdate(result.updatedCode);
+      }
     } catch (error) {
       console.error(error);
       const errorMessage = { role: 'assistant' as const, content: "Sorry, I couldn't get a response. Please try again." };

@@ -83,6 +83,14 @@ export function EditorLayout() {
     setCurrentContent(content);
   }, []);
 
+  const handleCodeUpdate = useCallback((newCode: string) => {
+    setCurrentContent(newCode);
+    toast({
+        title: "Code Updated",
+        description: "The AI agent has updated the code in your editor.",
+    });
+  }, [toast]);
+
   const handleSave = useCallback(async () => {
     if (activeFileId) {
       await db.transaction('rw', db.fileContents, db.versions, async () => {
@@ -254,6 +262,7 @@ export function EditorLayout() {
                 executionOutput={executionOutput}
                 activeTab={activeToolTab}
                 onTabChange={setActiveToolTab}
+                onCodeUpdate={handleCodeUpdate}
               />
             </div>
           </div>
