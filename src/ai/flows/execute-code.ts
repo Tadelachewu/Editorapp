@@ -38,6 +38,7 @@ Your task is to simulate the execution of this code and provide the output it wo
 
 - For languages that produce console output (like C++, Python, JavaScript, Java, Go, etc.), provide the standard console output.
 - For UI languages like React Native, describe the UI that would be rendered in a textual format. Do not provide code, just a description of the visual elements.
+- For server applications (like Node.js or a web server in another language), simulate the server starting up. Provide the console output, and then describe how a user could interact with it (e.g., "You could now open a browser and navigate to http://... to see the 'Hello, World!' response.").
 
 Programming Language: {{{language}}}
 
