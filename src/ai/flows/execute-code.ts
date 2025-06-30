@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const ExecuteCodeInputSchema = z.object({
   code: z.string().describe('The code block to be executed.'),
-  language: z.string().describe('The programming language of the code (C++ or React Native).'),
+  language: z.string().describe('The programming language of the code (e.g., C++, React Native, Python).'),
 });
 export type ExecuteCodeInput = z.infer<typeof ExecuteCodeInputSchema>;
 
@@ -36,8 +36,8 @@ const prompt = ai.definePrompt({
 You will be given a block of code and its programming language.
 Your task is to simulate the execution of this code and provide the output it would generate.
 
-- For C++, provide the standard console output.
-- For React Native, describe the UI that would be rendered in a textual format. Do not provide code, just a description of the visual elements.
+- For languages that produce console output (like C++, Python, JavaScript, Java, Go, etc.), provide the standard console output.
+- For UI languages like React Native, describe the UI that would be rendered in a textual format. Do not provide code, just a description of the visual elements.
 
 Programming Language: {{{language}}}
 

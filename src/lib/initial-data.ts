@@ -5,6 +5,10 @@ export const initialFiles: ProjectFile[] = [
   { id: '2', name: 'App.tsx', type: 'rn', language: 'React Native' },
   { id: '3', name: 'utils.h', type: 'cpp', language: 'C++' },
   { id: '4', name: 'Button.tsx', type: 'rn', language: 'React Native' },
+  { id: '5', name: 'main.py', type: 'py', language: 'Python' },
+  { id: '6', name: 'app.js', type: 'js', language: 'JavaScript' },
+  { id: '7', name: 'Main.java', type: 'java', language: 'Java' },
+  { id: '8', name: 'main.go', type: 'go', language: 'Go' },
 ];
 
 const cppMainContent = `#include <iostream>
@@ -68,12 +72,38 @@ const styles = StyleSheet.create({
 
 export default CustomButton;`;
 
+const pythonContent = `def main():
+    print("Hello, Python!")
+
+if __name__ == "__main__":
+    main()`;
+
+const jsContent = `console.log("Hello, JavaScript!");`;
+
+const javaContent = `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, Java!");
+    }
+}`;
+
+const goContent = `package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, Go!")
+}`;
+
 
 export const initialContent: FileContentStore = {
   '1': cppMainContent,
   '2': rnAppContent,
   '3': cppHeaderContent,
   '4': rnButtonContent,
+  '5': pythonContent,
+  '6': jsContent,
+  '7': javaContent,
+  '8': goContent,
 };
 
 export const initialHistory: FileHistoryStore = {
@@ -81,4 +111,8 @@ export const initialHistory: FileHistoryStore = {
   '2': [{ id: 'v2-1', content: rnAppContent, timestamp: new Date() }],
   '3': [{ id: 'v3-1', content: cppHeaderContent, timestamp: new Date() }],
   '4': [{ id: 'v4-1', content: rnButtonContent, timestamp: new Date() }],
+  '5': [{ id: 'v5-1', content: pythonContent, timestamp: new Date() }],
+  '6': [{ id: 'v6-1', content: jsContent, timestamp: new Date() }],
+  '7': [{ id: 'v7-1', content: javaContent, timestamp: new Date() }],
+  '8': [{ id: 'v8-1', content: goContent, timestamp: new Date() }],
 };

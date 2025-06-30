@@ -1,14 +1,16 @@
-export type FileType = 'cpp' | 'rn';
+export type FileType = 'cpp' | 'rn' | 'py' | 'js' | 'java' | 'go';
+
+export type Language = 'C++' | 'React Native' | 'Python' | 'JavaScript' | 'Java' | 'Go';
 
 export type ProjectFile = {
   id: string;
   name: string;
   type: FileType;
-  language: 'C++' | 'React Native';
+  language: Language;
 };
 
 export type Version = {
-  id: string;
+  id:string;
   content: string;
   timestamp: Date;
 };
