@@ -28,7 +28,7 @@ export function EditorLayout() {
 
 
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionTranscript, setExecutionTranscript] = useState('');
+  const [executionTranscript, setExecutionTranscript] = useState<string | null>(null);
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [activeToolTab, setActiveToolTab] = useState('improvements');
   
@@ -49,7 +49,7 @@ export function EditorLayout() {
   useEffect(() => {
     let stale = false;
     if (activeFileId) {
-      setExecutionTranscript('');
+      setExecutionTranscript(null);
       setIsWaitingForInput(false);
       db.fileContents.get(activeFileId).then(fileContent => {
         if (!stale && fileContent) {
@@ -76,7 +76,7 @@ export function EditorLayout() {
     const item = allItems?.find(i => i.id === id);
     if (item?.itemType === 'file') {
       setActiveFileId(id);
-      setExecutionTranscript('');
+      setExecutionTranscript(null);
       setIsWaitingForInput(false);
       setActiveToolTab('improvements');
     }
@@ -158,7 +158,7 @@ export function EditorLayout() {
     setIsExecuting(true);
     setIsWaitingForInput(false);
 
-    const newTranscriptWithInput = executionTranscript + input + '\n';
+    const newTranscriptWithInput = (executionTranscript || '') + input + '\n';
     setExecutionTranscript(newTranscriptWithInput);
     
     try {
@@ -170,7 +170,7 @@ export function EditorLayout() {
         });
 
         if (result) {
-            setExecutionTranscript(prev => prev + result.output);
+            setExecutionTranscript(prev => (prev || '') + result.output);
             setIsWaitingForInput(result.isWaitingForInput);
         } else {
             throw new Error("The AI returned an invalid or empty response.");
@@ -179,7 +179,7 @@ export function EditorLayout() {
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-        setExecutionTranscript(prev => prev + `\nAn error occurred during execution: ${errorMessage}`);
+        setExecutionTranscript(prev => (prev || '') + `\nAn error occurred during execution: ${errorMessage}`);
         setIsWaitingForInput(false);
     } finally {
         setIsExecuting(false);

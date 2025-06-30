@@ -20,7 +20,7 @@ interface ToolPanelProps {
   history: DbVersion[];
   onRevert: (versionId: number) => void;
   isExecuting: boolean;
-  executionOutput: string;
+  executionOutput: string | null;
   onExecutionInput: (input: string) => void;
   isWaitingForInput: boolean;
   activeTab: string;
@@ -157,54 +157,54 @@ export function ToolPanel({
           </TabsList>
           
           <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-            {isExecuting && !executionOutput ? (
-              <div className="flex items-center text-sm text-muted-foreground p-4">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Executing code...
-              </div>
-            ) : executionOutput || isWaitingForInput ? (
-              <div className="flex flex-col h-full gap-2">
-                <h3 className="text-sm font-semibold px-1">Execution Output</h3>
-                <ScrollArea className="flex-1 rounded-md border bg-muted/20 p-4" ref={scrollAreaRef}>
-                  <pre className="whitespace-pre-wrap font-code text-sm">
-                    {executionOutput}
-                    {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
-                  </pre>
-                </ScrollArea>
-                {isWaitingForInput && (
-                  <form onSubmit={handleSendExecutionInput} className="flex items-center gap-2">
-                    <Textarea
-                      ref={inputRef}
-                      value={executionInput}
-                      onChange={(e) => setExecutionInput(e.target.value)}
-                      placeholder="Type your input here and press Enter..."
-                      className="min-h-[40px] flex-1 resize-none"
-                      rows={1}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendExecutionInput(e);
-                        }
-                      }}
-                      disabled={isExecuting}
-                      autoFocus
-                    />
-                    <Button type="submit" disabled={isExecuting} size="icon">
-                      <Send className="w-4 h-4" />
-                      <span className="sr-only">Send Input</span>
-                    </Button>
-                  </form>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex items-center justify-center">
-                <p>
-                  Click the "Run" button in the editor to execute the code and
-                  see the output here.
-                </p>
-              </div>
-            )}
-          </TabsContent>
+             {executionOutput !== null ? (
+               <div className="flex flex-col h-full gap-2">
+                 <h3 className="text-sm font-semibold px-1">Execution Output</h3>
+                 <ScrollArea className="flex-1 rounded-md border bg-muted/20 p-4" ref={scrollAreaRef}>
+                   <pre className="whitespace-pre-wrap font-code text-sm">
+                     {executionOutput}
+                     {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
+                   </pre>
+                 </ScrollArea>
+                 {isWaitingForInput && (
+                   <form onSubmit={handleSendExecutionInput} className="flex items-center gap-2">
+                     <Textarea
+                       ref={inputRef}
+                       value={executionInput}
+                       onChange={(e) => setExecutionInput(e.target.value)}
+                       placeholder="Type your input here and press Enter..."
+                       className="min-h-[40px] flex-1 resize-none"
+                       rows={1}
+                       onKeyDown={(e) => {
+                         if (e.key === 'Enter' && !e.shiftKey) {
+                             e.preventDefault();
+                             handleSendExecutionInput(e);
+                         }
+                       }}
+                       disabled={isExecuting}
+                       autoFocus
+                     />
+                     <Button type="submit" disabled={isExecuting} size="icon">
+                       <Send className="w-4 h-4" />
+                       <span className="sr-only">Send Input</span>
+                     </Button>
+                   </form>
+                 )}
+               </div>
+             ) : isExecuting ? (
+               <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                 Executing code...
+               </div>
+             ) : (
+               <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex items-center justify-center">
+                 <p>
+                   Click the "Run" button in the editor to execute the code and
+                   see the output here.
+                 </p>
+               </div>
+             )}
+           </TabsContent>
 
           <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
             <ScrollArea className="flex-1 -mx-6 px-6 py-4" ref={scrollAreaRef}>
