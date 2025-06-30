@@ -11,7 +11,8 @@ import { NewFileDialog } from '@/components/new-file-dialog';
 import { useToast } from "@/hooks/use-toast";
 import { executeCode } from '@/ai/flows/execute-code';
 import { db } from '@/lib/db';
-import type { ProjectItem, FileContent, Language, FileType } from '@/lib/types';
+import type { ProjectItem, FileContent, Language, FileType, DbVersion } from '@/lib/types';
+import { fileTemplates } from '@/lib/initial-data';
 
 
 export function EditorLayout() {
@@ -33,8 +34,11 @@ export function EditorLayout() {
   useEffect(() => {
     if (allItems && allItems.length > 0) {
       const activeFileExists = allItems.some(f => f.id === activeFileId);
-      if ((!activeFileId || !activeFileExists) && allItems[0].itemType === 'file') {
-        setActiveFileId(allItems[0].id);
+      if ((!activeFileId || !activeFileExists)) {
+        const firstFile = allItems.find(item => item.itemType === 'file');
+        if (firstFile) {
+          setActiveFileId(firstFile.id);
+        }
       }
     } else if (allItems && allItems.length === 0) {
       setActiveFileId(null);
@@ -151,8 +155,11 @@ export function EditorLayout() {
     
     await db.transaction('rw', db.items, db.fileContents, async () => {
         await db.items.add(newItem);
-        if (newItem.itemType === 'file') {
-            const newContent: FileContent = { id: newItem.id, content: `// New file: ${name}` };
+        if (newItem.itemType === 'file' && newItem.language) {
+            const newContent: FileContent = { 
+              id: newItem.id, 
+              content: fileTemplates[newItem.language] || `// New file: ${name}` 
+            };
             await db.fileContents.add(newContent);
             setActiveFileId(newItem.id);
         }
@@ -187,8 +194,9 @@ export function EditorLayout() {
 
     await db.transaction('rw', db.items, db.fileContents, db.versions, async () => {
         await db.items.bulkDelete(idsToDelete);
-        const fileIdsToDelete = (await db.items.bulkGet(idsToDelete))
-            .filter(item => item?.itemType === 'file')
+        const fileIdsInDb = await db.items.bulkGet(idsToDelete);
+        const fileIdsToDelete = fileIdsInDb
+            .filter((item): item is ProjectItem => !!item && item.itemType === 'file')
             .map(item => item!.id);
             
         await db.fileContents.bulkDelete(fileIdsToDelete);

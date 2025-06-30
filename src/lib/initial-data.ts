@@ -126,6 +126,56 @@ export const initialContent: FileContentStore = {
   '8': goContent,
 };
 
+export const fileTemplates: Record<Language, string> = {
+  'C++': `#include <iostream>
+
+int main() {
+    std::cout << "New C++ file!" << std::endl;
+    return 0;
+}`,
+  'React Native': `import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const NewComponent = () => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>New React Native Component</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 20,
+  }
+});
+
+export default NewComponent;`,
+  'Python': `def main():
+    print("New Python file!")
+
+if __name__ == "__main__":
+    main()`,
+  'JavaScript': `console.log("New JavaScript file!");`,
+  'Java': `public class NewFile {
+    public static void main(String[] args) {
+        System.out.println("New Java file!");
+    }
+}`,
+  'Go': `package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("New Go file!")
+}`,
+};
+
 export const initialHistorySeed: Record<string, { content: string; timestamp: Date }[]> = {
   '1': [{ content: cppMainContent, timestamp: new Date() }],
   '2': [{ content: rnAppContent, timestamp: new Date() }],
