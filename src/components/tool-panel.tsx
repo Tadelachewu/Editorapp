@@ -91,8 +91,7 @@ export function ToolPanel({
     }
   };
 
-  const handleSendChatMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendChatMessage = async () => {
     if (!chatInput.trim() || !file || !file.language) return;
 
     const userMessage = { role: 'user' as const, content: chatInput };
@@ -122,6 +121,12 @@ export function ToolPanel({
       setIsChatting(false);
     }
   };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendChatMessage();
+  };
+
 
   const handleSendExecutionInput = (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,7 +236,7 @@ export function ToolPanel({
                     )}
                 </div>
             </ScrollArea>
-            <form onSubmit={handleSendChatMessage} className="flex items-center gap-2 pt-2 border-t mt-2">
+            <form onSubmit={handleFormSubmit} className="flex items-center gap-2 pt-2 border-t mt-2">
                 <Textarea
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
@@ -241,9 +246,10 @@ export function ToolPanel({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendChatMessage(e as any);
+                        handleSendChatMessage();
                     }
                   }}
+                  disabled={isChatting}
                 />
                 <Button type="submit" disabled={isChatting || !chatInput.trim()} size="icon">
                   <Send className="w-4 h-4" />
