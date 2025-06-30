@@ -138,7 +138,11 @@ export function EditorLayout() {
       const result = await executeCode({ code: currentContent, language: activeFile.language });
       
       if (result && typeof result.output === 'string') {
-        setExecutionTranscript(result.output);
+        if (result.output === "" && !result.isWaitingForInput) {
+            setExecutionTranscript("[Program finished with no output]");
+        } else {
+            setExecutionTranscript(result.output);
+        }
         setIsWaitingForInput(result.isWaitingForInput || false);
       } else {
         console.error("Execution Error: AI returned invalid data", result);
