@@ -70,12 +70,12 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Tools</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={onTabChange} className="h-full">
+      <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
+        <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
             <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> AI Improvements</TabsTrigger>
@@ -83,7 +83,7 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
             <TabsTrigger value="diagnostics"><ShieldAlert className="w-4 h-4 mr-1" /> Diagnostics</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
-          <ScrollArea className="h-[calc(100vh-12rem)] mt-4">
+          <ScrollArea className="flex-1 mt-4">
             <TabsContent value="output">
               {isExecuting ? (
                 <div className="flex items-center text-sm text-muted-foreground p-4">

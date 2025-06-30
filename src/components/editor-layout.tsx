@@ -102,11 +102,11 @@ export function EditorLayout() {
           <ProjectManager files={files} activeFileId={activeFileId} onFileSelect={handleFileSelect} />
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1">
-          <div className="flex h-full w-full">
+          <div className="flex flex-col lg:flex-row h-full w-full">
              <div className="md:hidden absolute top-2 left-2 z-20">
               <SidebarTrigger />
             </div>
-            <div className="w-full lg:w-1/2 flex flex-col p-1 sm:p-2 h-full">
+            <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col p-1 sm:p-2">
               <CodeEditor
                 file={activeFile}
                 content={activeFileContent}
@@ -115,7 +115,7 @@ export function EditorLayout() {
                 onRun={handleRun}
               />
             </div>
-            <div className="hidden lg:flex w-1/2 flex-col border-l border-border p-1 sm:p-2 h-full">
+            <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2">
               <ToolPanel
                 key={activeFileId}
                 file={activeFile}
