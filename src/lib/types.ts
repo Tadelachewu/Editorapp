@@ -15,5 +15,18 @@ export type Version = {
   timestamp: Date;
 };
 
+export type FileContent = {
+  id: string; // This is the file ID
+  content: string;
+}
+
+export type DbVersion = {
+  vid?: number;
+  fileId: string;
+  content: string;
+  timestamp: Date;
+}
+
+
 export type FileContentStore = Record<string, string>;
 export type FileHistoryStore = Record<string, Version[]>;

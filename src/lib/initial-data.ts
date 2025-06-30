@@ -1,4 +1,4 @@
-import type { ProjectFile, FileContentStore, FileHistoryStore } from './types';
+import type { ProjectFile, FileContentStore, Version, Language, FileType } from './types';
 
 export const initialFiles: ProjectFile[] = [
   { id: '1', name: 'main.cpp', type: 'cpp', language: 'C++' },
@@ -10,6 +10,17 @@ export const initialFiles: ProjectFile[] = [
   { id: '7', name: 'Main.java', type: 'java', language: 'Java' },
   { id: '8', name: 'main.go', type: 'go', language: 'Go' },
 ];
+
+export const languages: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
+
+export const fileTypesByLanguage: Record<Language, FileType> = {
+  'C++': 'cpp',
+  'React Native': 'rn',
+  'Python': 'py',
+  'JavaScript': 'js',
+  'Java': 'java',
+  'Go': 'go',
+};
 
 const cppMainContent = `#include <iostream>
 
@@ -106,13 +117,13 @@ export const initialContent: FileContentStore = {
   '8': goContent,
 };
 
-export const initialHistory: FileHistoryStore = {
-  '1': [{ id: 'v1-1', content: cppMainContent, timestamp: new Date() }],
-  '2': [{ id: 'v2-1', content: rnAppContent, timestamp: new Date() }],
-  '3': [{ id: 'v3-1', content: cppHeaderContent, timestamp: new Date() }],
-  '4': [{ id: 'v4-1', content: rnButtonContent, timestamp: new Date() }],
-  '5': [{ id: 'v5-1', content: pythonContent, timestamp: new Date() }],
-  '6': [{ id: 'v6-1', content: jsContent, timestamp: new Date() }],
-  '7': [{ id: 'v7-1', content: javaContent, timestamp: new Date() }],
-  '8': [{ id: 'v8-1', content: goContent, timestamp: new Date() }],
+export const initialHistorySeed: Record<string, Omit<Version, 'id'>[]> = {
+  '1': [{ content: cppMainContent, timestamp: new Date() }],
+  '2': [{ content: rnAppContent, timestamp: new Date() }],
+  '3': [{ content: cppHeaderContent, timestamp: new Date() }],
+  '4': [{ content: rnButtonContent, timestamp: new Date() }],
+  '5': [{ content: pythonContent, timestamp: new Date() }],
+  '6': [{ content: jsContent, timestamp: new Date() }],
+  '7': [{ content: javaContent, timestamp: new Date() }],
+  '8': [{ content: goContent, timestamp: new Date() }],
 };

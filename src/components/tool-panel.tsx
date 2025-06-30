@@ -10,13 +10,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements';
 import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
-import type { ProjectFile, Version } from '@/lib/types';
+import type { ProjectFile, DbVersion } from '@/lib/types';
 
 interface ToolPanelProps {
   file: ProjectFile | undefined;
   content: string;
-  history: Version[];
-  onRevert: (versionId: string) => void;
+  history: DbVersion[];
+  onRevert: (versionId: number) => void;
   isExecuting: boolean;
   executionOutput: string;
   activeTab: string;
@@ -141,12 +141,12 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
               {history.length > 0 ? (
                 <ul className="space-y-2">
                   {history.map(v => (
-                    <li key={v.id} className="flex items-center justify-between rounded-md border p-2">
+                    <li key={v.vid} className="flex items-center justify-between rounded-md border p-2">
                       <div>
                         <p className="text-sm">Saved {formatDistanceToNow(v.timestamp, { addSuffix: true })}</p>
                         <p className="text-xs text-muted-foreground">{v.timestamp.toLocaleString()}</p>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => onRevert(v.id)}>Revert</Button>
+                      <Button variant="ghost" size="sm" onClick={() => onRevert(v.vid!)}>Revert</Button>
                     </li>
                   ))}
                 </ul>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Code, FileCode2 } from 'lucide-react';
+import { useState } from 'react';
+import { Code, FileCode2, PlusCircle, Trash2 } from 'lucide-react';
 import {
   SidebarHeader,
   SidebarMenu,
@@ -10,11 +11,26 @@ import {
 } from '@/components/ui/sidebar';
 import type { ProjectFile, Language } from '@/lib/types';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from './ui/skeleton';
+
 
 interface ProjectManagerProps {
   files: ProjectFile[];
   activeFileId: string | null;
   onFileSelect: (id: string) => void;
+  onNewFile: () => void;
+  onFileDelete: (id: string) => void;
 }
 
 const LanguageIcon = ({ language }: { language: Language }) => {
@@ -43,7 +59,9 @@ const badgeText: Record<string, string> = {
   'Go': 'Go',
 };
 
-export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectManagerProps) {
+export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, onFileDelete }: ProjectManagerProps) {
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+
   const groupedFiles = files.reduce((acc, file) => {
     (acc[file.language] = acc[file.language] || []).push(file);
     return acc;
@@ -51,17 +69,34 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
 
   const languageOrder: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
   
+  const fileToDelete = files.find(f => f.id === deleteCandidate);
+
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-            <FileCode2 className="w-8 h-8 text-primary" />
-            <span className="text-lg font-semibold">File Manager</span>
+        <div className="flex items-center justify-between p-2">
+            <div className='flex items-center gap-2'>
+              <FileCode2 className="w-8 h-8 text-primary" />
+              <span className="text-lg font-semibold">File Manager</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onNewFile} className="w-7 h-7">
+              <PlusCircle className="w-5 h-5" />
+            </Button>
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col">
         <SidebarMenu className="flex-1 overflow-y-auto px-2">
-            {languageOrder.map(language => {
+            {!files ? (
+              <div className="space-y-2 p-2">
+                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            ) : files.length === 0 ? (
+                <div className="text-center p-4 text-sm text-muted-foreground">
+                    <p>No files yet.</p>
+                    <Button variant="link" onClick={onNewFile}>Create a new file</Button>
+                </div>
+            ) : (
+            languageOrder.map(language => {
               const langFiles = groupedFiles[language];
               if (!langFiles || langFiles.length === 0) return null;
 
@@ -75,19 +110,46 @@ export function ProjectManager({ files, activeFileId, onFileSelect }: ProjectMan
                               onClick={() => onFileSelect(file.id)}
                               isActive={activeFileId === file.id}
                               tooltip={file.name}
+                              className="group"
                           >
                               <LanguageIcon language={file.language} />
-                              <span>{file.name}</span>
-                              <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
+                              <span className="flex-1 truncate">{file.name}</span>
+                              <Badge variant="outline" className="ml-auto mr-8">{badgeText[file.language]}</Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteCandidate(file.id);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
                   </div>
                 </div>
               )
-            })}
+            }))}
         </SidebarMenu>
       </SidebarContent>
+
+      <AlertDialog open={!!deleteCandidate} onOpenChange={(open) => !open && setDeleteCandidate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the file "{fileToDelete?.name}" and all of its version history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteCandidate(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { onFileDelete(deleteCandidate!); setDeleteCandidate(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
