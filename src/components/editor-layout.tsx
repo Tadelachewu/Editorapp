@@ -77,11 +77,16 @@ export function EditorLayout() {
 
     try {
       const result = await executeCode({ code: activeFileContent, language: activeFile.language });
-      setExecutionOutput(result.output);
+      if (result?.output) {
+        setExecutionOutput(result.output);
+      } else {
+        throw new Error("The AI failed to generate a valid output for the code execution.");
+      }
     } catch (error) {
       console.error(error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to execute code." });
-      setExecutionOutput('An error occurred during execution.');
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
+      setExecutionOutput(`An error occurred during execution: ${errorMessage}`);
     } finally {
       setIsExecuting(false);
     }
