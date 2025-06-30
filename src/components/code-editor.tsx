@@ -3,14 +3,14 @@
 import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { ProjectFile, Language } from '@/lib/types';
+import type { ProjectItem, Language } from '@/lib/types';
 import { Save, Play } from 'lucide-react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
 import type * as monaco from 'monaco-editor';
 
 interface CodeEditorProps {
-  file: ProjectFile | undefined;
+  file: ProjectItem | undefined;
   content: string;
   onContentChange: (content: string) => void;
   onSave: () => void;
@@ -30,7 +30,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
   const monacoInstance = useMonaco();
 
   useEffect(() => {
-    if (!monacoInstance || !file) return;
+    if (!monacoInstance || !file || file.itemType !== 'file' || !file.language || !file.fileType) return;
 
     const monacoLanguage = languageMap[file.language] || 'plaintext';
 
@@ -41,7 +41,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
         try {
           const result = await generateCodeSuggestions({
             codeSnippet: code,
-            fileType: file.type,
+            fileType: file.fileType!,
           });
 
           if (result && result.suggestions) {
@@ -75,7 +75,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
     };
   }, [monacoInstance, file]);
 
-  if (!file) {
+  if (!file || file.itemType !== 'file') {
     return (
       <Card className="h-full flex items-center justify-center">
         <CardContent>
@@ -85,7 +85,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
     );
   }
 
-  const monacoLanguage = languageMap[file.language] || 'plaintext';
+  const monacoLanguage = file.language ? languageMap[file.language] : 'plaintext';
 
   return (
     <Card className="h-full flex flex-col">

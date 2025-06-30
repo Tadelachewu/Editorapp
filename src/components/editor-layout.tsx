@@ -11,36 +11,36 @@ import { NewFileDialog } from '@/components/new-file-dialog';
 import { useToast } from "@/hooks/use-toast";
 import { executeCode } from '@/ai/flows/execute-code';
 import { db } from '@/lib/db';
-import type { ProjectFile, FileContent, Language, FileType } from '@/lib/types';
+import type { ProjectItem, FileContent, Language, FileType } from '@/lib/types';
 
 
 export function EditorLayout() {
   const { toast } = useToast();
 
-  const files = useLiveQuery(() => db.files.orderBy('name').toArray(), []);
+  const allItems = useLiveQuery(() => db.items.orderBy('name').toArray(), []);
   
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [currentContent, setCurrentContent] = useState<string>('');
   
   const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false);
+  const [newItemParentId, setNewItemParentId] = useState<string | null>(null);
+
 
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionOutput, setExecutionOutput] = useState('');
   const [activeToolTab, setActiveToolTab] = useState('improvements');
   
-  // Effect to select the first file when the component loads or files change
   useEffect(() => {
-    if (files && files.length > 0) {
-      const activeFileExists = files.some(f => f.id === activeFileId);
-      if (!activeFileId || !activeFileExists) {
-        setActiveFileId(files[0].id);
+    if (allItems && allItems.length > 0) {
+      const activeFileExists = allItems.some(f => f.id === activeFileId);
+      if ((!activeFileId || !activeFileExists) && allItems[0].itemType === 'file') {
+        setActiveFileId(allItems[0].id);
       }
-    } else if (files && files.length === 0) {
+    } else if (allItems && allItems.length === 0) {
       setActiveFileId(null);
     }
-  }, [files, activeFileId]);
+  }, [allItems, activeFileId]);
 
-  // Effect to load content when active file changes
   useEffect(() => {
     let stale = false;
     if (activeFileId) {
@@ -48,6 +48,8 @@ export function EditorLayout() {
       db.fileContents.get(activeFileId).then(fileContent => {
         if (!stale && fileContent) {
           setCurrentContent(fileContent.content);
+        } else if (!stale) {
+          setCurrentContent('');
         }
       });
     } else {
@@ -56,7 +58,7 @@ export function EditorLayout() {
     return () => { stale = true; };
   }, [activeFileId]);
 
-  const activeFile = files?.find(f => f.id === activeFileId);
+  const activeFile = allItems?.find(f => f.id === activeFileId);
   const activeFileHistory = useLiveQuery(async () => {
     if (!activeFileId) return [];
     const versions = await db.versions.where('fileId').equals(activeFileId).sortBy('timestamp');
@@ -65,10 +67,13 @@ export function EditorLayout() {
 
 
   const handleFileSelect = useCallback((id: string) => {
-    setActiveFileId(id);
-    setExecutionOutput('');
-    setActiveToolTab('improvements');
-  }, []);
+    const item = allItems?.find(i => i.id === id);
+    if (item?.itemType === 'file') {
+      setActiveFileId(id);
+      setExecutionOutput('');
+      setActiveToolTab('improvements');
+    }
+  }, [allItems]);
 
   const handleContentChange = useCallback((content: string) => {
     setCurrentContent(content);
@@ -106,7 +111,7 @@ export function EditorLayout() {
   }, [activeFileId, activeFile?.name, toast]);
 
   const handleRun = useCallback(async () => {
-    if (!activeFile) return;
+    if (!activeFile || !activeFile.language) return;
 
     setIsExecuting(true);
     setExecutionOutput('');
@@ -129,46 +134,91 @@ export function EditorLayout() {
     }
   }, [activeFile, currentContent, toast]);
 
-  const handleCreateFile = async (name: string, language: Language, type: FileType) => {
-    const newFile: ProjectFile = { id: uuidv4(), name, language, type };
-    const newContent: FileContent = { id: newFile.id, content: `// New file: ${name}` };
+  const openNewItemDialog = (parentId: string | null) => {
+    setNewItemParentId(parentId);
+    setIsNewFileDialogOpen(true);
+  };
+
+  const handleCreateItem = async (name: string, itemType: 'file' | 'folder', language: Language | null, fileType: FileType | null) => {
+    const newItem: ProjectItem = { 
+        id: uuidv4(), 
+        name, 
+        itemType,
+        parentId: newItemParentId,
+        language,
+        fileType,
+    };
     
-    await db.transaction('rw', db.files, db.fileContents, async () => {
-        await db.files.add(newFile);
-        await db.fileContents.add(newContent);
+    await db.transaction('rw', db.items, db.fileContents, async () => {
+        await db.items.add(newItem);
+        if (newItem.itemType === 'file') {
+            const newContent: FileContent = { id: newItem.id, content: `// New file: ${name}` };
+            await db.fileContents.add(newContent);
+            setActiveFileId(newItem.id);
+        }
     });
-    setActiveFileId(newFile.id);
     setIsNewFileDialogOpen(false);
-    toast({ title: "File Created", description: `Successfully created ${name}` });
+    setNewItemParentId(null);
+    toast({ title: "Item Created", description: `Successfully created ${name}` });
+  };
+  
+  const getChildrenRecursive = async (parentId: string): Promise<string[]> => {
+      const children = await db.items.where('parentId').equals(parentId).toArray();
+      let allDescendants: string[] = [];
+      for (const child of children) {
+          allDescendants.push(child.id);
+          if (child.itemType === 'folder') {
+              const grandChildren = await getChildrenRecursive(child.id);
+              allDescendants = [...allDescendants, ...grandChildren];
+          }
+      }
+      return allDescendants;
   };
 
-  const handleDeleteFile = async (id: string) => {
-    const fileToDelete = files?.find(f => f.id === id);
-    if (!fileToDelete) return;
+  const handleDeleteItem = async (id: string) => {
+    const itemToDelete = allItems?.find(f => f.id === id);
+    if (!itemToDelete) return;
 
-    await db.transaction('rw', db.files, db.fileContents, db.versions, async () => {
-        await db.files.delete(id);
-        await db.fileContents.delete(id);
-        await db.versions.where('fileId').equals(id).delete();
+    const idsToDelete = [id];
+    if (itemToDelete.itemType === 'folder') {
+        const childrenIds = await getChildrenRecursive(id);
+        idsToDelete.push(...childrenIds);
+    }
+
+    await db.transaction('rw', db.items, db.fileContents, db.versions, async () => {
+        await db.items.bulkDelete(idsToDelete);
+        const fileIdsToDelete = (await db.items.bulkGet(idsToDelete))
+            .filter(item => item?.itemType === 'file')
+            .map(item => item!.id);
+            
+        await db.fileContents.bulkDelete(fileIdsToDelete);
+        for (const fileId of fileIdsToDelete) {
+            await db.versions.where('fileId').equals(fileId).delete();
+        }
     });
-    toast({ variant: "destructive", title: "File Deleted", description: `Successfully deleted ${fileToDelete.name}` });
+
+    if (activeFileId && idsToDelete.includes(activeFileId)) {
+      setActiveFileId(null);
+    }
+    toast({ variant: "destructive", title: "Item Deleted", description: `Successfully deleted ${itemToDelete.name} and its contents.` });
   };
+
 
   return (
     <SidebarProvider>
        <NewFileDialog
         open={isNewFileDialogOpen}
         onOpenChange={setIsNewFileDialogOpen}
-        onFileCreate={handleCreateFile}
+        onItemCreate={handleCreateItem}
       />
       <div className="flex h-screen bg-background">
         <Sidebar>
           <ProjectManager 
-            files={files || []} 
+            items={allItems || []} 
             activeFileId={activeFileId} 
             onFileSelect={handleFileSelect}
-            onNewFile={() => setIsNewFileDialogOpen(true)}
-            onFileDelete={handleDeleteFile}
+            onNewItem={openNewItemDialog}
+            onItemDelete={handleDeleteItem}
           />
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1">

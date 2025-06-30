@@ -1,17 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { Code, PlusCircle, Trash2, Folder } from 'lucide-react';
+import { Code, Folder, PlusCircle, Trash2, FolderPlus, FilePlus } from 'lucide-react';
 import {
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
   SidebarContent,
-  SidebarMenuButton
 } from '@/components/ui/sidebar';
-import type { ProjectFile, Language } from '@/lib/types';
-import { Badge } from './ui/badge';
+import type { ProjectItem, Language } from '@/lib/types';
 import { Button } from './ui/button';
 import {
   AlertDialog,
@@ -24,59 +20,134 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from './ui/skeleton';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 interface ProjectManagerProps {
-  files: ProjectFile[];
+  items: ProjectItem[];
   activeFileId: string | null;
   onFileSelect: (id: string) => void;
-  onNewFile: () => void;
-  onFileDelete: (id: string) => void;
+  onNewItem: (parentId: string | null) => void;
+  onItemDelete: (id: string) => void;
 }
 
-const LanguageIcon = ({ language }: { language: Language }) => {
+interface TreeItem extends ProjectItem {
+    children: TreeItem[];
+}
+
+const buildTree = (items: ProjectItem[]): TreeItem[] => {
+    const tree: TreeItem[] = [];
+    const map: { [key: string]: TreeItem } = {};
+
+    items.forEach(item => {
+        map[item.id] = { ...item, children: [] };
+    });
+
+    items.forEach(item => {
+        const node = map[item.id];
+        if (item.parentId && map[item.parentId]) {
+            map[item.parentId].children.push(node);
+        } else {
+            tree.push(node);
+        }
+    });
+
+    // Sort items so folders come before files
+    const sortItems = (nodes: TreeItem[]) => {
+        nodes.sort((a, b) => {
+            if (a.itemType === 'folder' && b.itemType === 'file') return -1;
+            if (a.itemType === 'file' && b.itemType === 'folder') return 1;
+            return a.name.localeCompare(b.name);
+        });
+        nodes.forEach(node => sortItems(node.children));
+    };
+    sortItems(tree);
+
+    return tree;
+};
+
+
+const LanguageIcon = ({ language }: { language: Language | null }) => {
   if (language === 'React Native') {
-    return (
-      <svg
-        className="w-4 h-4"
-        fill="currentColor"
-        viewBox="0 0 128 128"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="m63.999.001c-35.346 0-63.999 28.653-63.999 63.999s28.653 63.999 63.999 63.999c35.346 0 63.999-28.653 63.999-63.999s-28.653-63.999-63.999-63.999zm0 121.5c-31.745 0-57.502-25.757-57.502-57.501s25.757-57.501 57.502-57.501 57.502 25.757 57.502 57.501-25.757 57.501-57.502 57.501z"/>
-        <path d="m76.124 50.85c-6.19-2.34-12.38-4.68-18.57-7.02l-1.404-.315c2.34-4.275 4.68-8.55 7.02-12.825l.315-1.404c-3.15-.735-6.3-1.47-9.45-2.205l-.945 2.04c-3.15 6.825-6.3 13.65-9.45 20.475-.735 1.575-1.47 3.15-2.205 4.725l18.255 7.965c-.105.315-.21.63-.315.945-1.155 3.465-2.31 6.93-3.465 10.395l-20.475-8.895c.84 2.835 1.68 5.67 2.52 8.505l.63 1.26c3.15.63 6.3 1.26 9.45 1.89l.945-2.145c3.045-7.035 6.09-14.07 9.135-21.105.735-1.68 1.47-3.36 2.205-5.04l-18.255-7.965c.105-.315.21-.63.315-.945 1.155-3.465 2.31-6.93 3.465-10.395l20.475 8.895c-.84-2.835-1.68-5.67-2.52-8.505zm-34.964-11.34c-1.89 4.095-3.78 8.19-5.67 12.285 2.205.42 4.41.84 6.615 1.26 2.31-4.725 4.62-9.45 6.93-14.175-2.52-.42-5.04-.84-7.875-1.365zm12.6 57.855c-4.41 1.68-8.82 3.36-13.23 5.04 1.26-2.415 2.52-4.83 3.78-7.245 4.83-1.89 9.66-3.78 14.49-5.67-1.575 2.52-3.15 5.04-5.04 7.875zm-1.89-28.35c-4.725 2.1-9.45 4.2-14.175 6.3 1.47-2.835 2.94-5.67 4.41-8.505 4.725-2.1 9.45-4.2 14.175-6.3-1.47 2.835-2.94 5.67-4.41 8.505zm14.175 14.175c-4.725 2.1-9.45 4.2-14.175 6.3 1.47-2.835 2.94-5.67 4.41-8.505 4.725-2.1 9.45-4.2 14.175-6.3-1.47 2.835-2.94 5.67-4.41 8.505z"/>
-      </svg>
-    );
+    return <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><path d="m63.999.001c-35.346 0-63.999 28.653-63.999 63.999s28.653 63.999 63.999 63.999c35.346 0 63.999-28.653 63.999-63.999s-28.653-63.999-63.999-63.999zm0 121.5c-31.745 0-57.502-25.757-57.502-57.501s25.757-57.501 57.502-57.501 57.502 25.757 57.502 57.501-25.757 57.501-57.502 57.501z"/><path d="m76.124 50.85c-6.19-2.34-12.38-4.68-18.57-7.02l-1.404-.315c2.34-4.275 4.68-8.55 7.02-12.825l.315-1.404c-3.15-.735-6.3-1.47-9.45-2.205l-.945 2.04c-3.15 6.825-6.3 13.65-9.45 20.475-.735 1.575-1.47 3.15-2.205 4.725l18.255 7.965c-.105.315-.21.63-.315.945-1.155 3.465-2.31 6.93-3.465 10.395l-20.475-8.895c.84 2.835 1.68 5.67 2.52 8.505l.63 1.26c3.15.63 6.3 1.26 9.45 1.89l.945-2.145c3.045-7.035 6.09-14.07 9.135-21.105.735-1.68 1.47-3.36 2.205-5.04l-18.255-7.965c.105-.315.21-.63.315-.945 1.155-3.465 2.31-6.93 3.465-10.395l20.475 8.895c-.84-2.835-1.68-5.67-2.52-8.505zm-34.964-11.34c-1.89 4.095-3.78 8.19-5.67 12.285 2.205.42 4.41.84 6.615 1.26 2.31-4.725 4.62-9.45 6.93-14.175-2.52-.42-5.04-.84-7.875-1.365zm12.6 57.855c-4.41 1.68-8.82 3.36-13.23 5.04 1.26-2.415 2.52-4.83 3.78-7.245 4.83-1.89 9.66-3.78 14.49-5.67-1.575 2.52-3.15 5.04-5.04 7.875zm-1.89-28.35c-4.725 2.1-9.45 4.2-14.175 6.3 1.47-2.835 2.94-5.67 4.41-8.505 4.725-2.1 9.45-4.2 14.175-6.3-1.47 2.835-2.94 5.67-4.41 8.505zm14.175 14.175c-4.725 2.1-9.45 4.2-14.175 6.3 1.47-2.835 2.94-5.67 4.41-8.505 4.725-2.1 9.45-4.2 14.175-6.3-1.47 2.835-2.94 5.67-4.41 8.505z"/></svg>;
   }
   return <Code className="w-4 h-4" />;
 };
 
-const badgeText: Record<string, string> = {
-  'C++': 'C++',
-  'React Native': 'RN',
-  'Python': 'Py',
-  'JavaScript': 'JS',
-  'Java': 'Java',
-  'Go': 'Go',
+const ProjectTree = ({
+    nodes,
+    activeFileId,
+    onFileSelect,
+    onNewItem,
+    setDeleteCandidate,
+    level = 0
+}: {
+    nodes: TreeItem[];
+    activeFileId: string | null;
+    onFileSelect: (id: string) => void;
+    onNewItem: (parentId: string | null) => void;
+    setDeleteCandidate: (id: string | null) => void;
+    level?: number;
+}) => {
+    return (
+        <div className="flex flex-col gap-1">
+            {nodes.map(node => (
+                node.itemType === 'folder' ? (
+                    <Collapsible key={node.id} defaultOpen>
+                        <div className="flex items-center group pr-2 rounded-md hover:bg-accent">
+                            <CollapsibleTrigger className="flex-1">
+                                <div className={cn("flex items-center gap-2 p-1.5 text-sm font-semibold", activeFileId === node.id && "bg-accent")}>
+                                    <Folder className="w-4 h-4" />
+                                    <span>{node.name}</span>
+                                </div>
+                            </CollapsibleTrigger>
+                            <div className="hidden group-hover:flex items-center gap-1">
+                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => onNewItem(node.id)}>
+                                    <FilePlus className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => onNewItem(node.id)}>
+                                    <FolderPlus className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setDeleteCandidate(node.id)}>
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                        <CollapsibleContent className="pl-6">
+                            <ProjectTree
+                                nodes={node.children}
+                                activeFileId={activeFileId}
+                                onFileSelect={onFileSelect}
+                                onNewItem={onNewItem}
+                                setDeleteCandidate={setDeleteCandidate}
+                                level={level + 1}
+                            />
+                        </CollapsibleContent>
+                    </Collapsible>
+                ) : (
+                    <div key={node.id} className="flex items-center group pr-2 rounded-md"
+                         onClick={() => onFileSelect(node.id)}
+                    >
+                       <div className={cn("flex items-center gap-2 p-1.5 text-sm flex-1 cursor-pointer", activeFileId === node.id && "bg-accent")}>
+                            <LanguageIcon language={node.language} />
+                            <span>{node.name}</span>
+                        </div>
+                        <Button variant="ghost" size="icon" className="w-6 h-6 hidden group-hover:flex" onClick={(e) => { e.stopPropagation(); setDeleteCandidate(node.id);}}>
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
+                    </div>
+                )
+            ))}
+        </div>
+    );
 };
 
-export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, onFileDelete }: ProjectManagerProps) {
+
+export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, onItemDelete }: ProjectManagerProps) {
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
 
-  const groupedFiles = files.reduce((acc, file) => {
-    (acc[file.language] = acc[file.language] || []).push(file);
-    return acc;
-  }, {} as Record<Language, ProjectFile[]>);
-
-  const languageOrder: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go'];
-  
-  const fileToDelete = files.find(f => f.id === deleteCandidate);
+  const fileTree = items ? buildTree(items) : [];
+  const itemToDelete = items.find(f => f.id === deleteCandidate);
 
   return (
     <>
@@ -92,73 +163,32 @@ export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, o
               />
               <span className="text-lg font-semibold">File Manager</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={onNewFile} className="w-7 h-7">
+            <Button variant="ghost" size="icon" onClick={() => onNewItem(null)} className="w-7 h-7">
               <PlusCircle className="w-5 h-5" />
             </Button>
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col">
-        <SidebarMenu className="flex-1 overflow-y-auto px-2">
-            {!files ? (
+        <div className="flex-1 overflow-y-auto px-2">
+            {!items ? (
               <div className="space-y-2 p-2">
                 {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
               </div>
-            ) : files.length === 0 ? (
+            ) : items.length === 0 ? (
                 <div className="text-center p-4 text-sm text-muted-foreground">
                     <p>No files yet.</p>
-                    <Button variant="link" onClick={onNewFile}>Create a new file</Button>
+                    <Button variant="link" onClick={() => onNewItem(null)}>Create a new item</Button>
                 </div>
             ) : (
-            <Accordion type="multiple" defaultValue={languageOrder} className="w-full">
-              {languageOrder.map(language => {
-                const langFiles = groupedFiles[language];
-                if (!langFiles || langFiles.length === 0) return null;
-
-                return (
-                  <AccordionItem value={language} key={language} className="border-b-0">
-                    <AccordionTrigger className="px-2 py-1.5 hover:no-underline hover:bg-accent rounded-md text-sm">
-                      <div className="flex items-center gap-2 font-semibold">
-                        <Folder className="w-4 h-4" />
-                        <span>{language}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-1 pl-4 pb-0">
-                      <div className="flex flex-col gap-1">
-                        {langFiles.map(file => (
-                            <SidebarMenuItem key={file.id}>
-                              <div className="relative flex w-full">
-                                <SidebarMenuButton
-                                    onClick={() => onFileSelect(file.id)}
-                                    isActive={activeFileId === file.id}
-                                    tooltip={file.name}
-                                    className="group w-full"
-                                >
-                                    <LanguageIcon language={file.language} />
-                                    <span className="flex-1 truncate">{file.name}</span>
-                                    <Badge variant="outline" className="ml-auto">{badgeText[file.language]}</Badge>
-                                </SidebarMenuButton>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDeleteCandidate(file.id);
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </SidebarMenuItem>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )
-              })}
-          </Accordion>
+                <ProjectTree 
+                    nodes={fileTree}
+                    activeFileId={activeFileId}
+                    onFileSelect={onFileSelect}
+                    onNewItem={onNewItem}
+                    setDeleteCandidate={setDeleteCandidate}
+                />
           )}
-        </SidebarMenu>
+        </div>
       </SidebarContent>
 
       <AlertDialog open={!!deleteCandidate} onOpenChange={(open) => !open && setDeleteCandidate(null)}>
@@ -166,12 +196,12 @@ export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, o
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the file "{fileToDelete?.name}" and all of its version history. This action cannot be undone.
+              This will permanently delete "{itemToDelete?.name}" and all of its contents. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDeleteCandidate(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { onFileDelete(deleteCandidate!); setDeleteCandidate(null); }}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={() => { onItemDelete(deleteCandidate!); setDeleteCandidate(null); }}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -28,33 +28,50 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { languages, fileTypesByLanguage } from "@/lib/initial-data";
-import type { Language } from "@/lib/types";
+import type { Language, FileType } from "@/lib/types";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Filename is required."),
-  language: z.enum(languages as [Language, ...Language[]]),
-});
+  name: z.string().min(1, "Name is required."),
+  itemType: z.enum(['file', 'folder']),
+  language: z.enum(languages as [Language, ...Language[]]).optional(),
+}).refine(data => {
+    if (data.itemType === 'file' && !data.language) {
+      return false;
+    }
+    return true;
+  }, {
+    message: 'Language is required for files.',
+    path: ['language'],
+  });
 
 interface NewFileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFileCreate: (name: string, language: Language, type: string) => void;
+  onItemCreate: (name: string, itemType: 'file' | 'folder', language: Language | null, type: FileType | null) => void;
 }
 
-export function NewFileDialog({ open, onOpenChange, onFileCreate }: NewFileDialogProps) {
+export function NewFileDialog({ open, onOpenChange, onItemCreate }: NewFileDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      itemType: "file",
       language: "C++",
     },
   });
 
+  const itemType = form.watch("itemType");
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { name, language } = values;
-    const type = fileTypesByLanguage[language];
-    onFileCreate(name, language, type);
+    const { name, itemType, language } = values;
+    if (itemType === 'file' && language) {
+        const fileType = fileTypesByLanguage[language];
+        onItemCreate(name, 'file', language, fileType);
+    } else {
+        onItemCreate(name, 'folder', null, null);
+    }
     form.reset();
   }
 
@@ -62,21 +79,38 @@ export function NewFileDialog({ open, onOpenChange, onFileCreate }: NewFileDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New File</DialogTitle>
+          <DialogTitle>Create New Item</DialogTitle>
           <DialogDescription>
-            Enter a name and select a language for your new file.
+            Create a new file or folder in your project.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
               control={form.control}
-              name="name"
+              name="itemType"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Filename</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel>Item Type</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., my-component.tsx" {...field} />
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="file" />
+                        </FormControl>
+                        <FormLabel className="font-normal">File</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="folder" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Folder</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -84,30 +118,45 @@ export function NewFileDialog({ open, onOpenChange, onFileCreate }: NewFileDialo
             />
             <FormField
               control={form.control}
-              name="language"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Language</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a language" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {languages.map((lang) => (
-                        <SelectItem key={lang} value={lang}>
-                          {lang}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>{itemType === 'file' ? 'Filename' : 'Folder Name'}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={itemType === 'file' ? 'e.g., my-component.tsx' : 'e.g., components'} {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {itemType === 'file' && (
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a language" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {languages.map((lang) => (
+                          <SelectItem key={lang} value={lang}>
+                            {lang}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <DialogFooter>
-              <Button type="submit">Create File</Button>
+              <Button type="submit">Create</Button>
             </DialogFooter>
           </form>
         </Form>

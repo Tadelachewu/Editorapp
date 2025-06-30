@@ -1,9 +1,9 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { ProjectFile, FileContent, DbVersion } from './types';
-import { initialFiles, initialContent, initialHistorySeed } from './initial-data';
+import type { ProjectItem, FileContent, DbVersion } from './types';
+import { initialItems, initialContent, initialHistorySeed } from './initial-data';
 
 class CodeSyncDB extends Dexie {
-  files!: EntityTable<ProjectFile, 'id'>;
+  items!: EntityTable<ProjectItem, 'id'>;
   fileContents!: EntityTable<FileContent, 'id'>;
   versions!: EntityTable<DbVersion, 'vid'>;
 
@@ -14,6 +14,12 @@ class CodeSyncDB extends Dexie {
       fileContents: 'id', // Primary key is fileId
       versions: '++vid, fileId, timestamp', // Auto-incrementing primary key, and index on fileId
     });
+    this.version(2).stores({
+      items: 'id, parentId, name, itemType', // New schema with parentId for hierarchy
+      fileContents: 'id',
+      versions: '++vid, fileId, timestamp',
+      files: null, // Delete the old 'files' table
+    });
   }
 }
 
@@ -21,8 +27,8 @@ export const db = new CodeSyncDB();
 
 db.on('populate', async () => {
   try {
-    await db.transaction('rw', db.files, db.fileContents, db.versions, async () => {
-      await db.files.bulkAdd(initialFiles);
+    await db.transaction('rw', db.items, db.fileContents, db.versions, async () => {
+      await db.items.bulkAdd(initialItems);
       
       const contentsToAdd = Object.entries(initialContent).map(([id, content]) => ({ id, content }));
       await db.fileContents.bulkAdd(contentsToAdd);

@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements';
-import type { ProjectFile, DbVersion } from '@/lib/types';
+import type { ProjectItem, DbVersion } from '@/lib/types';
 
 interface ToolPanelProps {
-  file: ProjectFile | undefined;
+  file: ProjectItem | undefined;
   content: string;
   history: DbVersion[];
   onRevert: (versionId: number) => void;
@@ -28,7 +28,7 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
   const { toast } = useToast();
 
   const handleGenerateImprovements = async () => {
-    if (!file) return;
+    if (!file || !file.language) return;
     setIsLoading(true);
     setImprovements('');
     try {

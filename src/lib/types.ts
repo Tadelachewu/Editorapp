@@ -2,11 +2,13 @@ export type FileType = 'cpp' | 'rn' | 'py' | 'js' | 'java' | 'go';
 
 export type Language = 'C++' | 'React Native' | 'Python' | 'JavaScript' | 'Java' | 'Go';
 
-export type ProjectFile = {
+export type ProjectItem = {
   id: string;
   name: string;
-  type: FileType;
-  language: Language;
+  itemType: 'file' | 'folder';
+  parentId: string | null;
+  language: Language | null;
+  fileType: FileType | null;
 };
 
 export type FileContent = {
