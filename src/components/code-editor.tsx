@@ -1,10 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import type { ProjectFile } from '@/lib/types';
+import type { ProjectFile, Language } from '@/lib/types';
 import { Save, Play } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 
 interface CodeEditorProps {
   file: ProjectFile | undefined;
@@ -13,6 +13,15 @@ interface CodeEditorProps {
   onSave: () => void;
   onRun: () => void;
 }
+
+const languageMap: Record<Language, string> = {
+  'C++': 'cpp',
+  'React Native': 'javascript',
+  'Python': 'python',
+  'JavaScript': 'javascript',
+  'Java': 'java',
+  'Go': 'go',
+};
 
 export function CodeEditor({ file, content, onContentChange, onSave, onRun }: CodeEditorProps) {
   if (!file) {
@@ -24,6 +33,8 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
       </Card>
     );
   }
+
+  const monacoLanguage = languageMap[file.language] || 'plaintext';
 
   return (
     <Card className="h-full flex flex-col">
@@ -44,11 +55,20 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun }: Co
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-0">
-        <Textarea
+        <Editor
+          height="100%"
+          language={monacoLanguage}
           value={content}
-          onChange={e => onContentChange(e.target.value)}
-          placeholder="Type your code here..."
-          className="h-full w-full resize-none border-0 rounded-none focus-visible:ring-0 font-code text-base"
+          onChange={(value) => onContentChange(value || '')}
+          theme="vs-dark"
+          options={{
+            minimap: { enabled: true },
+            fontSize: 14,
+            fontFamily: '"Source Code Pro", monospace',
+            wordWrap: 'on',
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+          }}
         />
       </CardContent>
     </Card>
