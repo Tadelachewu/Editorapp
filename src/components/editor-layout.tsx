@@ -10,7 +10,7 @@ import { ToolPanel } from '@/components/tool-panel';
 import { NewFileDialog } from '@/components/new-file-dialog';
 import { useToast } from "@/hooks/use-toast";
 import { executeCode } from '@/ai/flows/execute-code';
-import { db } from '@/lib/db';
+import { db, resetDatabase } from '@/lib/db';
 import type { ProjectItem, FileContent, Language, FileType, DbVersion } from '@/lib/types';
 import { fileTemplates } from '@/lib/initial-data';
 
@@ -259,6 +259,26 @@ export function EditorLayout() {
     }
     toast({ variant: "destructive", title: "Item Deleted", description: `Successfully deleted ${itemToDelete.name} and its contents.` });
   };
+  
+  const handleResetProject = async () => {
+    try {
+        await resetDatabase();
+        toast({
+            title: "Project Reset",
+            description: "The project is being restored. The page will now reload.",
+        });
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    } catch (error) {
+        console.error("Failed to reset project:", error);
+        toast({
+            variant: "destructive",
+            title: "Reset Failed",
+            description: "Could not reset the project. Please check the console for errors.",
+        });
+    }
+  };
 
 
   return (
@@ -276,6 +296,7 @@ export function EditorLayout() {
             onFileSelect={handleFileSelect}
             onNewItem={openNewItemDialog}
             onItemDelete={handleDeleteItem}
+            onResetProject={handleResetProject}
           />
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1">

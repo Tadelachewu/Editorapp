@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Code, Folder, PlusCircle, Trash2, FolderPlus, FilePlus } from 'lucide-react';
+import { Code, Folder, PlusCircle, Trash2, FolderPlus, FilePlus, RotateCw } from 'lucide-react';
 import {
   SidebarHeader,
   SidebarContent,
@@ -29,6 +29,7 @@ interface ProjectManagerProps {
   onFileSelect: (id: string) => void;
   onNewItem: (parentId: string | null) => void;
   onItemDelete: (id: string) => void;
+  onResetProject: () => void;
 }
 
 interface TreeItem extends ProjectItem {
@@ -143,8 +144,9 @@ const ProjectTree = ({
 };
 
 
-export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, onItemDelete }: ProjectManagerProps) {
+export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, onItemDelete, onResetProject }: ProjectManagerProps) {
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const fileTree = items ? buildTree(items) : [];
   const itemToDelete = items.find(f => f.id === deleteCandidate);
@@ -163,9 +165,14 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
               />
               <span className="text-lg font-semibold">File Manager</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => onNewItem(null)} className="w-7 h-7">
-              <PlusCircle className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={() => onNewItem(null)} className="w-7 h-7" title="New Item">
+                <PlusCircle className="w-5 h-5" />
+              </Button>
+               <Button variant="ghost" size="icon" onClick={() => setShowResetConfirm(true)} className="w-7 h-7" title="Reset Project">
+                <RotateCw className="w-5 h-5" />
+              </Button>
+            </div>
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col">
@@ -202,6 +209,21 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDeleteCandidate(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => { if(deleteCandidate) onItemDelete(deleteCandidate); setDeleteCandidate(null); }}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will delete all your files and changes, restoring the project to its original state. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowResetConfirm(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { onResetProject(); setShowResetConfirm(false); }}>Reset</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
