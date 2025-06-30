@@ -110,23 +110,22 @@ export function ProjectManager({ files, activeFileId, onFileSelect, onNewFile, o
                               onClick={() => onFileSelect(file.id)}
                               isActive={activeFileId === file.id}
                               tooltip={file.name}
-                              className="group"
                           >
                               <LanguageIcon language={file.language} />
                               <span className="flex-1 truncate">{file.name}</span>
                               <Badge variant="outline" className="ml-auto mr-8">{badgeText[file.language]}</Badge>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteCandidate(file.id);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
                           </SidebarMenuButton>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 group-hover/menu-item:opacity-100 focus:opacity-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteCandidate(file.id);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </SidebarMenuItem>
                     ))}
                   </div>
