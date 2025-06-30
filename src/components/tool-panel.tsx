@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Bot, History, ShieldAlert, Loader2, Terminal } from 'lucide-react';
+import { Bot, History, Loader2, Terminal } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -59,10 +59,9 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
             <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> AI Improvements</TabsTrigger>
-            <TabsTrigger value="diagnostics"><ShieldAlert className="w-4 h-4 mr-1" /> Diagnostics</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
           <ScrollArea className="flex-1 mt-4">
@@ -95,15 +94,6 @@ export function ToolPanel({ file, content, history, onRevert, isExecuting, execu
               </Button>
               {isLoading && !improvements && <p className="mt-4 text-sm text-muted-foreground">Generating...</p>}
               {improvements && <pre className="mt-4 whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">{improvements}</pre>}
-            </TabsContent>
-            <TabsContent value="diagnostics">
-                <p className="text-sm text-muted-foreground mb-4">Real-time error checking and warnings. Uses AI to find improvements.</p>
-                 <Button onClick={handleGenerateImprovements} disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldAlert className="mr-2 h-4 w-4" />}
-                    Run Diagnostics
-                </Button>
-                {isLoading && !improvements && <p className="mt-4 text-sm text-muted-foreground">Running diagnostics...</p>}
-                {improvements && <pre className="mt-4 whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm">{improvements}</pre>}
             </TabsContent>
             <TabsContent value="history">
               {history.length > 0 ? (
