@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +55,25 @@ export function ToolPanel({
   const [executionInput, setExecutionInput] = useState('');
 
   const isWebApp = file?.language === 'Web';
+
+  const iframeSrc = useMemo(() => {
+    if (!isWebApp) return undefined;
+    try {
+      const blob = new Blob([content], { type: 'text/html' });
+      return URL.createObjectURL(blob);
+    } catch (e) {
+      return undefined;
+    }
+  }, [content, isWebApp]);
+
+  useEffect(() => {
+    // This effect handles the cleanup of the generated blob URL to prevent memory leaks.
+    return () => {
+      if (iframeSrc) {
+        URL.revokeObjectURL(iframeSrc);
+      }
+    };
+  }, [iframeSrc]);
 
   useEffect(() => {
     // Reset chat when file changes
@@ -244,7 +263,8 @@ export function ToolPanel({
           {isWebApp ? (
             <TabsContent value="preview" className="flex-1 mt-2 min-h-0">
               <iframe
-                srcDoc={content}
+                key={iframeSrc}
+                src={iframeSrc}
                 title="Browser Preview"
                 className="w-full h-full border-0 rounded-md bg-white"
                 sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
