@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, ChevronRight } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements';
@@ -243,9 +244,9 @@ export function ToolPanel({
                     <p>Click the "Run" button in the editor to execute your code.</p>
                 </div>
             ) : (
-                <div className="flex-1 flex flex-col min-h-0 bg-black text-white/90 font-mono text-sm rounded-md">
+                <div className="flex-1 flex flex-col min-h-0 bg-secondary rounded-md">
                     <ScrollArea className="flex-1 p-4" ref={executionOutputRef}>
-                        <pre className="whitespace-pre-wrap break-words">
+                        <pre className="whitespace-pre-wrap break-words font-mono text-sm">
                             {executionTranscript}
                         </pre>
                         {isExecuting && !isWaitingForInput && (
@@ -256,22 +257,15 @@ export function ToolPanel({
                         )}
                     </ScrollArea>
                     {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t border-gray-700 p-2">
-                             <ChevronRight className="h-4 w-4 text-gray-500" />
-                             <Textarea
+                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2">
+                             <Input
                                 value={executionInput}
                                 onChange={(e) => setExecutionInput(e.target.value)}
-                                placeholder=""
-                                className="bg-transparent border-none p-0 h-auto flex-1 resize-none focus:ring-0 focus:outline-none"
-                                rows={1}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleExecutionInputSubmit(e as any);
-                                    }
-                                }}
+                                placeholder="Enter input..."
+                                className="flex-1"
                                 autoFocus
                              />
+                             <Button type="submit">Send</Button>
                         </form>
                     )}
                 </div>
