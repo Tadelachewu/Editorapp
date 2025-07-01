@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Bot, History, Loader2, Terminal, MessageSquare, User, Send } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,10 +19,6 @@ interface ToolPanelProps {
   content: string;
   history: DbVersion[];
   onRevert: (versionId: number) => void;
-  isExecuting: boolean;
-  executionOutput: string | null;
-  onExecutionInput: (input: string) => void;
-  isWaitingForInput: boolean;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onCodeUpdate: (newCode: string) => void;
@@ -33,10 +29,6 @@ export function ToolPanel({
   content,
   history,
   onRevert,
-  isExecuting,
-  executionOutput,
-  onExecutionInput,
-  isWaitingForInput,
   activeTab,
   onTabChange,
   onCodeUpdate,
@@ -49,10 +41,7 @@ export function ToolPanel({
   const [chatInput, setChatInput] = useState('');
   const [isChatting, setIsChatting] = useState(false);
   
-  const [executionInput, setExecutionInput] = useState('');
-
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     // Reset chat when file changes
@@ -66,13 +55,7 @@ export function ToolPanel({
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [executionOutput, executionInput, chatMessages]);
-
-  useEffect(() => {
-    if (isWaitingForInput && activeTab === 'output') {
-      inputRef.current?.focus();
-    }
-  }, [isWaitingForInput, activeTab]);
+  }, [chatMessages]);
 
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
@@ -103,6 +86,7 @@ export function ToolPanel({
         code: content,
         language: file.language,
         message: currentInput,
+        history: chatMessages,
       });
       const assistantMessage = { role: 'assistant' as const, content: result.response };
       setChatMessages(prev => [...prev, assistantMessage]);
@@ -125,13 +109,6 @@ export function ToolPanel({
     handleSendChatMessage();
   };
 
-  const handleSendExecutionInput = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isExecuting || !executionInput.trim()) return;
-    onExecutionInput(executionInput);
-    setExecutionInput('');
-  };
-
   if (!file) {
     return (
         <Card className="h-full flex items-center justify-center">
@@ -149,63 +126,12 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="agent"><MessageSquare className="w-4 h-4 mr-1" /> Agent</TabsTrigger>
             <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> Improvements</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-             {executionOutput !== null ? (
-               <div className="flex flex-col h-full gap-2">
-                 <h3 className="text-sm font-semibold px-1">Execution Output</h3>
-                 <ScrollArea className="flex-1 rounded-md border bg-muted/20 p-4" ref={scrollAreaRef}>
-                   <pre className="whitespace-pre-wrap font-code text-sm">
-                     {executionOutput}
-                     {isExecuting && <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />}
-                   </pre>
-                 </ScrollArea>
-                 {isWaitingForInput && (
-                   <form onSubmit={handleSendExecutionInput} className="flex items-center gap-2">
-                     <Textarea
-                       ref={inputRef}
-                       value={executionInput}
-                       onChange={(e) => setExecutionInput(e.target.value)}
-                       placeholder="Type your input here and press Enter..."
-                       className="min-h-[40px] flex-1 resize-none"
-                       rows={1}
-                       onKeyDown={(e) => {
-                         if (e.key === 'Enter' && !e.shiftKey) {
-                             e.preventDefault();
-                             handleSendExecutionInput(e);
-                         }
-                       }}
-                       disabled={isExecuting}
-                       autoFocus
-                     />
-                     <Button type="submit" disabled={isExecuting} size="icon">
-                       <Send className="w-4 h-4" />
-                       <span className="sr-only">Send Input</span>
-                     </Button>
-                   </form>
-                 )}
-               </div>
-             ) : isExecuting ? (
-               <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                 Executing code...
-               </div>
-             ) : (
-               <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex items-center justify-center">
-                 <p>
-                   Click the "Run" button in the editor to execute the code and
-                   see the output here.
-                 </p>
-               </div>
-             )}
-           </TabsContent>
-
           <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
             <ScrollArea className="flex-1 -mx-6 px-6 py-4" ref={scrollAreaRef}>
                 <div className="space-y-4">

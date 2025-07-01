@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -10,7 +10,6 @@ import { CodeEditor } from '@/components/code-editor';
 import { ToolPanel } from '@/components/tool-panel';
 import { NewFileDialog } from '@/components/new-file-dialog';
 import { useToast } from "@/hooks/use-toast";
-import { executeCode } from '@/ai/flows/execute-code';
 import { db, resetDatabase } from '@/lib/db';
 import type { ProjectItem, FileContent, Language, FileType, DbVersion } from '@/lib/types';
 import { fileTemplates } from '@/lib/initial-data';
@@ -28,11 +27,7 @@ export function EditorLayout() {
   const [newItemParentId, setNewItemParentId] = useState<string | null>(null);
 
 
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [executionTranscript, setExecutionTranscript] = useState<string | null>(null);
-  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-  const [activeToolTab, setActiveToolTab] = useState('improvements');
-  const executionController = useRef({ abort: false });
+  const [activeToolTab, setActiveToolTab] = useState('agent');
   
   useEffect(() => {
     if (allItems && allItems.length > 0) {
@@ -51,12 +46,6 @@ export function EditorLayout() {
   useEffect(() => {
     let stale = false;
     if (activeFileId) {
-      // Stop any running execution when the file changes
-      executionController.current.abort = true;
-      setIsExecuting(false);
-      setIsWaitingForInput(false);
-      setExecutionTranscript(null);
-      
       db.fileContents.get(activeFileId).then(fileContent => {
         if (!stale && fileContent) {
           setCurrentContent(fileContent.content);
@@ -69,7 +58,6 @@ export function EditorLayout() {
     }
     return () => { 
       stale = true; 
-      executionController.current.abort = true;
     };
   }, [activeFileId]);
 
@@ -85,7 +73,7 @@ export function EditorLayout() {
     const item = allItems?.find(i => i.id === id);
     if (item?.itemType === 'file') {
       setActiveFileId(id);
-      setActiveToolTab('improvements');
+      setActiveToolTab('agent');
     }
   }, [allItems]);
 
@@ -131,85 +119,6 @@ export function EditorLayout() {
       }
     }
   }, [activeFileId, activeFile?.name, toast]);
-
-  const runExecutionLoop = useCallback(async (code: string, language: Language, transcript: string) => {
-    if (executionController.current.abort) {
-        setIsExecuting(false);
-        setExecutionTranscript(prev => (prev || '') + "\n[Execution stopped by user]");
-        return;
-    }
-
-    try {
-        const result = await executeCode({
-            code,
-            language,
-            previousTranscript: transcript,
-        });
-
-        if (executionController.current.abort) {
-            setIsExecuting(false);
-            setExecutionTranscript(prev => (prev || '') + "\n[Execution stopped by user]");
-            return;
-        }
-
-        if (result && typeof result.output === 'string') {
-            const newTranscript = transcript + result.output;
-            setExecutionTranscript(newTranscript);
-
-            if (result.isWaitingForInput) {
-                setIsWaitingForInput(true);
-                setIsExecuting(false); // Pause execution, wait for user input
-            } else if (result.hasMoreOutput) {
-                setTimeout(() => runExecutionLoop(code, language, newTranscript), 200);
-            } else {
-                setIsExecuting(false);
-                if (newTranscript.trim() === '') {
-                    setExecutionTranscript("[Program finished with no output]");
-                } else {
-                    setExecutionTranscript(prev => (prev || '') + "\n[Program finished]");
-                }
-            }
-        } else {
-            throw new Error("Execution failed: The AI returned an invalid response.");
-        }
-    } catch (error) {
-        console.error("Execution Error: ", error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during execution.";
-        setExecutionTranscript(prev => (prev || '') + `\nExecution Error: ${errorMessage}`);
-        toast({ variant: "destructive", title: "Execution Error", description: errorMessage });
-        setIsExecuting(false);
-    }
-  }, [toast]);
-
-  const handleRun = useCallback(() => {
-    if (!activeFile || !activeFile.language || isExecuting) return;
-
-    setActiveToolTab('output');
-    setIsExecuting(true);
-    setExecutionTranscript('');
-    setIsWaitingForInput(false);
-    executionController.current.abort = false;
-
-    runExecutionLoop(currentContent, activeFile.language, '');
-  }, [activeFile, currentContent, isExecuting, runExecutionLoop]);
-
-  const handleStop = useCallback(() => {
-    executionController.current.abort = true;
-  }, []);
-
-  const handleExecutionInput = useCallback(async (input: string) => {
-    if (!activeFile || !activeFile.language || isExecuting || !input.trim()) return;
-
-    setIsExecuting(true);
-    setIsWaitingForInput(false);
-    executionController.current.abort = false;
-    
-    const newTranscript = (executionTranscript || '') + input + '\n';
-    setExecutionTranscript(newTranscript);
-    
-    runExecutionLoop(currentContent, activeFile.language, newTranscript);
-  }, [activeFile, currentContent, executionTranscript, isExecuting, runExecutionLoop]);
-
 
   const openNewItemDialog = (parentId: string | null) => {
     setNewItemParentId(parentId);
@@ -334,9 +243,6 @@ export function EditorLayout() {
                 content={currentContent}
                 onContentChange={handleContentChange}
                 onSave={handleSave}
-                onRun={handleRun}
-                isExecuting={isExecuting || isWaitingForInput}
-                onStop={handleStop}
               />
             </div>
             <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2">
@@ -346,10 +252,6 @@ export function EditorLayout() {
                 content={currentContent}
                 history={activeFileHistory || []}
                 onRevert={handleRevert}
-                isExecuting={isExecuting}
-                executionOutput={executionTranscript}
-                onExecutionInput={handleExecutionInput}
-                isWaitingForInput={isWaitingForInput}
                 activeTab={activeToolTab}
                 onTabChange={setActiveToolTab}
                 onCodeUpdate={handleCodeUpdate}
