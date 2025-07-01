@@ -236,40 +236,44 @@ export function ToolPanel({
           </TabsContent>
 
           <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-            <ScrollArea className="flex-1 -mx-6 bg-background" ref={executionOutputRef}>
-                <pre className="p-4 text-sm font-mono whitespace-pre-wrap">{executionTranscript}</pre>
-                {isExecuting && !isWaitingForInput && (
-                    <div className="flex items-center p-4">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Executing...</span>
-                    </div>
-                )}
-            </ScrollArea>
-            {isWaitingForInput && (
-                <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 pt-2 border-t mt-auto">
-                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                     <Textarea
-                        value={executionInput}
-                        onChange={(e) => setExecutionInput(e.target.value)}
-                        placeholder="Provide input to your program..."
-                        className="min-h-[40px] flex-1 resize-none"
-                        rows={1}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleExecutionInputSubmit(e as any);
-                            }
-                        }}
-                        autoFocus
-                     />
-                     <Button type="submit" size="sm">Send</Button>
-                </form>
-            )}
-             {!isExecuting && !isWaitingForInput && executionTranscript === '' && (
-                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+            {executionTranscript === '' && !isExecuting ? (
+                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center rounded-md bg-secondary">
                     <Terminal className="w-8 h-8 mx-auto mb-2" />
-                    <p className="font-semibold">Code Output</p>
+                    <p className="font-semibold">Terminal</p>
                     <p>Click the "Run" button in the editor to execute your code.</p>
+                </div>
+            ) : (
+                <div className="flex-1 flex flex-col min-h-0 bg-black text-white/90 font-mono text-sm rounded-md">
+                    <ScrollArea className="flex-1 p-4" ref={executionOutputRef}>
+                        <pre className="whitespace-pre-wrap break-words">
+                            {executionTranscript}
+                        </pre>
+                        {isExecuting && !isWaitingForInput && (
+                            <div className="flex items-center">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <span>Executing...</span>
+                            </div>
+                        )}
+                    </ScrollArea>
+                    {isWaitingForInput && (
+                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t border-gray-700 p-2">
+                             <ChevronRight className="h-4 w-4 text-gray-500" />
+                             <Textarea
+                                value={executionInput}
+                                onChange={(e) => setExecutionInput(e.target.value)}
+                                placeholder=""
+                                className="bg-transparent border-none p-0 h-auto flex-1 resize-none focus:ring-0 focus:outline-none"
+                                rows={1}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleExecutionInputSubmit(e as any);
+                                    }
+                                }}
+                                autoFocus
+                             />
+                        </form>
+                    )}
                 </div>
             )}
           </TabsContent>
