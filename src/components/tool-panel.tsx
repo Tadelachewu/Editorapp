@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +22,10 @@ interface ToolPanelProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onCodeUpdate: (newCode: string) => void;
+  isExecuting: boolean;
+  isWaitingForInput: boolean;
+  executionTranscript: string;
+  onExecuteInput: (input: string) => void;
 }
 
 export function ToolPanel({
@@ -32,6 +36,10 @@ export function ToolPanel({
   activeTab,
   onTabChange,
   onCodeUpdate,
+  isExecuting,
+  isWaitingForInput,
+  executionTranscript,
+  onExecuteInput,
 }: ToolPanelProps) {
   const [improvements, setImprovements] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +50,9 @@ export function ToolPanel({
   const [isChatting, setIsChatting] = useState(false);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const executionOutputRef = useRef<HTMLDivElement>(null);
+  const [executionInput, setExecutionInput] = useState('');
+
 
   useEffect(() => {
     // Reset chat when file changes
@@ -56,6 +67,13 @@ export function ToolPanel({
         }
     }
   }, [chatMessages]);
+
+  useEffect(() => {
+    const viewport = executionOutputRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, [executionTranscript, isExecuting]);
 
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
@@ -109,6 +127,13 @@ export function ToolPanel({
     handleSendChatMessage();
   };
 
+  const handleExecutionInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!executionInput.trim()) return;
+    onExecuteInput(executionInput);
+    setExecutionInput('');
+  };
+
   if (!file) {
     return (
         <Card className="h-full flex items-center justify-center">
@@ -126,8 +151,9 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="agent"><MessageSquare className="w-4 h-4 mr-1" /> Agent</TabsTrigger>
+            <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
             <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> Improvements</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
@@ -185,6 +211,45 @@ export function ToolPanel({
                   <span className="sr-only">Send</span>
                 </Button>
             </form>
+          </TabsContent>
+
+          <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
+            <ScrollArea className="flex-1 -mx-6 bg-background" ref={executionOutputRef}>
+                <pre className="p-4 text-sm font-mono whitespace-pre-wrap">{executionTranscript}</pre>
+                {isExecuting && !isWaitingForInput && (
+                    <div className="flex items-center p-4">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Executing...</span>
+                    </div>
+                )}
+            </ScrollArea>
+            {isWaitingForInput && (
+                <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 pt-2 border-t mt-auto">
+                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                     <Textarea
+                        value={executionInput}
+                        onChange={(e) => setExecutionInput(e.target.value)}
+                        placeholder="Provide input to your program..."
+                        className="min-h-[40px] flex-1 resize-none"
+                        rows={1}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleExecutionInputSubmit(e as any);
+                            }
+                        }}
+                        autoFocus
+                     />
+                     <Button type="submit" size="sm">Send</Button>
+                </form>
+            )}
+             {!isExecuting && !isWaitingForInput && executionTranscript === '' && (
+                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                    <Terminal className="w-8 h-8 mx-auto mb-2" />
+                    <p className="font-semibold">Code Output</p>
+                    <p>Click the "Run" button in the editor to execute your code.</p>
+                </div>
+            )}
           </TabsContent>
 
           <TabsContent value="improvements" className="flex-1 mt-4 overflow-y-auto flex flex-col items-center justify-center text-center">

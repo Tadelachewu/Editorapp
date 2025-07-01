@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { db, resetDatabase } from '@/lib/db';
 import type { ProjectItem, FileContent, Language, FileType, DbVersion } from '@/lib/types';
 import { fileTemplates } from '@/lib/initial-data';
+import { executeCode } from '@/ai/flows/execute-code';
 
 
 export function EditorLayout() {
@@ -26,8 +27,12 @@ export function EditorLayout() {
   const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false);
   const [newItemParentId, setNewItemParentId] = useState<string | null>(null);
 
-
   const [activeToolTab, setActiveToolTab] = useState('agent');
+
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  const [executionTranscript, setExecutionTranscript] = useState('');
+  const executionStateRef = useRef({ isRunning: false });
   
   useEffect(() => {
     if (allItems && allItems.length > 0) {
@@ -213,6 +218,91 @@ export function EditorLayout() {
     }
   };
 
+  const continueExecution = useCallback(async (fromTranscript: string, userInput?: string) => {
+    if (!activeFile || !activeFile.language || !currentContent) return;
+
+    let currentTranscript = fromTranscript;
+    if (userInput) {
+      currentTranscript += userInput + '\n';
+      setExecutionTranscript(currentTranscript);
+    }
+
+    let hasMore = true;
+    try {
+      while (executionStateRef.current.isRunning && hasMore) {
+        const result = await executeCode({
+          code: currentContent,
+          language: activeFile.language,
+          previousTranscript: currentTranscript,
+          userInput: userInput,
+        });
+
+        if (!executionStateRef.current.isRunning) break;
+        userInput = undefined; 
+
+        if (result.output) {
+          currentTranscript += result.output;
+          setExecutionTranscript(currentTranscript);
+        }
+        hasMore = result.hasMoreOutput;
+
+        if (result.isWaitingForInput) {
+          setIsWaitingForInput(true);
+          return; 
+        }
+      }
+    } catch (error) {
+      console.error("Execution error:", error);
+      const errMessage = (error instanceof Error ? error.message : "An unknown error occurred.");
+      setExecutionTranscript(prev => prev + `\n[ERROR: ${errMessage}]`);
+      toast({ variant: 'destructive', title: 'Execution Error', description: 'Something went wrong.' });
+    } finally {
+      if (executionStateRef.current.isRunning && !isWaitingForInput) {
+        setExecutionTranscript(prev => (prev.endsWith('\n') ? prev : prev + '\n') + '[Program finished]');
+      }
+      if (!isWaitingForInput) {
+        setIsExecuting(false);
+        executionStateRef.current.isRunning = false;
+      }
+    }
+  }, [activeFile, currentContent, isWaitingForInput, toast]);
+
+  const handleRunCode = useCallback(() => {
+    if (isExecuting) {
+      executionStateRef.current.isRunning = false;
+      setIsExecuting(false);
+      setIsWaitingForInput(false);
+      setExecutionTranscript(prev => (prev.endsWith('\n') ? prev : prev + '\n') + '[Execution stopped by user]');
+      toast({ title: 'Execution Stopped' });
+      return;
+    }
+
+    executionStateRef.current.isRunning = true;
+    setIsExecuting(true);
+    setIsWaitingForInput(false);
+    setExecutionTranscript('');
+    setActiveToolTab('output');
+    toast({ title: 'Execution Started' });
+
+    continueExecution('');
+  }, [isExecuting, continueExecution, toast]);
+
+  const handleExecuteInput = useCallback((input: string) => {
+    if (!isWaitingForInput) return;
+
+    setIsWaitingForInput(false);
+    continueExecution(executionTranscript, input);
+  }, [isWaitingForInput, executionTranscript, continueExecution]);
+
+  useEffect(() => {
+    if (executionStateRef.current.isRunning) {
+      executionStateRef.current.isRunning = false;
+      setIsExecuting(false);
+      setIsWaitingForInput(false);
+    }
+    setExecutionTranscript('');
+  }, [activeFileId]);
+
 
   return (
     <SidebarProvider>
@@ -243,6 +333,8 @@ export function EditorLayout() {
                 content={currentContent}
                 onContentChange={handleContentChange}
                 onSave={handleSave}
+                onRun={handleRunCode}
+                isRunning={isExecuting}
               />
             </div>
             <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2">
@@ -255,6 +347,10 @@ export function EditorLayout() {
                 activeTab={activeToolTab}
                 onTabChange={setActiveToolTab}
                 onCodeUpdate={handleCodeUpdate}
+                isExecuting={isExecuting}
+                isWaitingForInput={isWaitingForInput}
+                executionTranscript={executionTranscript}
+                onExecuteInput={handleExecuteInput}
               />
             </div>
           </div>
