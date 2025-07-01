@@ -58,9 +58,9 @@ const prompt = ai.definePrompt({
   name: 'executeCodePrompt',
   input: {schema: ExecuteCodeInputSchema},
   output: {schema: ExecuteCodeOutputSchema},
-  prompt: `You are a code execution simulator.
-Your ONLY function is to simulate the provided code and respond with a JSON object matching the provided schema.
-DO NOT add explanations or markdown. Your entire response must be the raw JSON object.
+  prompt: `You are a master-level code execution simulator. Your function is to perfectly mimic how a real computer terminal would execute the provided code. You will receive the code, the language, and the history of the execution so far. You must determine the *next* piece of output the program generates and whether it's waiting for user input.
+
+Your response MUST be a raw JSON object and nothing else.
 
 **CONTEXT**
 - Language: {{{language}}}
@@ -69,23 +69,37 @@ DO NOT add explanations or markdown. Your entire response must be the raw JSON o
 {{{code}}}
 \\\`\\\`\\\`
 {{#if previousTranscript}}
-- Execution History (The program is already running. The last line may be new user input to process):
+- Execution Transcript (This is the complete history of stdout and stdin so far. The program is already running.):
 \\\`\\\`\\\`
 {{{previousTranscript}}}
 \\\`\\\`\\\`
 {{/if}}
 
 **TASK**
-1.  Analyze the code and the execution history.
-2.  Simulate the code's execution from where it last left off.
-3.  Produce a JSON response that describes the *next* step of the execution.
+1.  Analyze the code and the current state based on the \`Execution Transcript\`.
+2.  Simulate the code's execution for **one step**. A "step" ends when the program either waits for user input or terminates.
+3.  Produce a JSON response describing the result of this step.
 
-**JSON OUTPUT RULES**
-- **\\\`output\\\` (string):** The new text printed by the program in this step. MUST include newlines (\\\`\\\\n\\\`). For a simple \\\`print("hello")\\\`, this field MUST be \\\`"hello\\\\n"\\\`.
-- **\\\`isWaitingForInput\\\` (boolean):** Set to \\\`true\\\` ONLY if the program has now PAUSED and is waiting for user input (e.g., after printing "Enter your name: ").
-- **\\\`hasMoreOutput\\\` (boolean):**
-    - Set to \\\`true\\\` if the program is in a long loop and has more to print.
-    - Set to \\\`false\\\` if the program has finished OR if \\\`isWaitingForInput\\\` is \\\`true\\\`.`,
+**RULES FOR SIMULATION & JSON OUTPUT**
+-   **\\\`output\\\` (string):** This field must contain the *exact* text the program prints to standard output in this step.
+    -   \\\`print()\\\` statements usually add a newline. For example, Python's \\\`print("hello")\\\` produces \\\`"hello\\\\n"\\\`.
+    -   \\\`input()\\\` prompts (like Python's \\\`input("Name: ")\\\`) DO NOT add a newline. The output should be just \\\`"Name: "\\\`.
+    -   Combine all consecutive print/output calls into a single \\\`output\\\` string before the program waits for input.
+-   **\\\`isWaitingForInput\\\` (boolean):**
+    -   Set to \\\`true\\\` ONLY if the program has now PAUSED and is waiting for user input (e.g., after an \\\`input()\\\` call).
+    -   If \\\`true\`, the \\\`output\\\` field should contain any text that was printed *before* the program started waiting (e.g., the input prompt itself).
+-   **\\\`hasMoreOutput\\\` (boolean):**
+    -   Set to \\\`true\\\` if the program is in a long loop and has more to print without user interaction.
+    -   Set to \\\`false\\\` if the program has finished OR if \\\`isWaitingForInput\\\` is \\\`true\`.
+
+**EXAMPLE SESSION (Python)**
+-   Code: \\\`name = input("Enter name: ")\\\\nprint(f"Hello, {name}")\\\`
+-   **Step 1 (Initial Run):**
+    -   Your Input: \\\`previousTranscript: ""\\\`
+    -   Your JSON Output: \\\`{ "output": "Enter name: ", "isWaitingForInput": true, "hasMoreOutput": false }\\\`
+-   **Step 2 (User provides input):**
+    -   Your Input: \\\`previousTranscript: "Enter name: Alice\\\\n"\\\`
+    -   Your JSON Output: \\\`{ "output": "Hello, Alice\\\\n", "isWaitingForInput": false, "hasMoreOutput": false }\\\``,
 });
 
 const executeCodeFlow = ai.defineFlow(
