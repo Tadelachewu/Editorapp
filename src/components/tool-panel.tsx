@@ -237,40 +237,52 @@ export function ToolPanel({
           </TabsContent>
 
           <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-            {executionTranscript === '' && !isExecuting ? (
-                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center rounded-md bg-black">
-                    <Terminal className="w-8 h-8 mx-auto mb-2" />
-                    <p className="font-semibold">Terminal</p>
-                    <p>Click the "Run" button in the editor to execute your code.</p>
-                </div>
-            ) : (
-                <div className="flex-1 flex flex-col min-h-0 bg-black text-white rounded-md font-mono text-sm">
-                    <ScrollArea className="flex-1 p-4" ref={executionOutputRef}>
-                        <pre className="whitespace-pre-wrap break-words">
-                            {executionTranscript}
-                        </pre>
-                        {isExecuting && !isWaitingForInput && (
-                            <div className="flex items-center">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                <span>Executing...</span>
-                            </div>
-                        )}
+            <Card className="flex-1 flex flex-col">
+              <CardHeader className="py-3 px-4 border-b">
+                <CardTitle className="flex items-center gap-2 text-base font-medium">
+                  <Terminal className="w-5 h-5" />
+                  Output
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 p-0 flex flex-col min-h-0">
+                {executionTranscript === '' && !isExecuting ? (
+                  <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                    <p>Output from your code will appear here.</p>
+                    <p className="text-xs">Click the "Run" button in the editor to start.</p>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col min-h-0 font-mono text-sm bg-secondary">
+                    <ScrollArea className="flex-1" ref={executionOutputRef}>
+                      <pre className="whitespace-pre-wrap break-words p-4">
+                        {executionTranscript}
+                      </pre>
+                      {isExecuting && !isWaitingForInput && (
+                        <div className="flex items-center text-muted-foreground px-4 pb-2">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Executing...</span>
+                        </div>
+                      )}
                     </ScrollArea>
                     {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t border-border p-2">
-                            <span className="text-gray-400">&gt;</span>
-                             <Input
-                                value={executionInput}
-                                onChange={(e) => setExecutionInput(e.target.value)}
-                                className="flex-1 bg-transparent p-0 border-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
-                                autoFocus
-                                spellCheck="false"
-                             />
-                             <button type="submit" className="hidden" aria-hidden="true" />
-                        </form>
+                      <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background">
+                        <Input
+                          value={executionInput}
+                          onChange={(e) => setExecutionInput(e.target.value)}
+                          className="flex-1 h-9"
+                          placeholder="Type your input here..."
+                          autoFocus
+                          spellCheck="false"
+                        />
+                        <Button type="submit" size="icon" className="h-9 w-9">
+                          <Send className="w-4 h-4" />
+                          <span className="sr-only">Send Input</span>
+                        </Button>
+                      </form>
                     )}
-                </div>
-            )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="improvements" className="flex-1 mt-4 overflow-y-auto flex flex-col items-center justify-center text-center">
