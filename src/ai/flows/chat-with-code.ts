@@ -57,7 +57,7 @@ You have two modes of operation: "Chat" and "Edit".
     *   **Example**: User says "add a button". You provide the full new code in 'updatedCode' and a confirmation in 'response'.
 
 **CRITICAL RULES**:
-*   NEVER use markdown backticks (\`\`\`) in the 'updatedCode' field.
+*   NEVER use markdown backticks (\\\`\\\`\\\`) in the 'updatedCode' field.
 *   ALWAYS return the *entire file content* in 'updatedCode', not just a snippet.
 *   Your response directly updates the user's editor. Follow these instructions carefully.
 *   Consider the conversation history for context.`,
