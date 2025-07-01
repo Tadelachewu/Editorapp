@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { ProjectItem, Language } from '@/lib/types';
-import { Save, Play, Square } from 'lucide-react';
+import { Save, Play, Square, Eye } from 'lucide-react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
 import type * as monaco from 'monaco-editor';
@@ -81,6 +81,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
   }
 
   const monacoLanguage = file.language ? languageMap[file.language] : 'plaintext';
+  const isWebApp = file.language === 'Web';
 
   return (
     <Card className="h-full flex flex-col">
@@ -90,13 +91,20 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
           <CardDescription>Language: {file.language}</CardDescription>
         </div>
         <div className="flex items-center gap-2">
-            <Button onClick={onRun} size="sm" variant={isRunning ? "destructive" : "default"}>
-              {isRunning ? (
-                <><Square className="mr-2 h-4 w-4" /> Stop</>
-              ) : (
-                <><Play className="mr-2 h-4 w-4" /> Run</>
-              )}
-            </Button>
+            {isWebApp ? (
+              <Button onClick={onRun} size="sm">
+                <Eye className="mr-2 h-4 w-4" />
+                Preview
+              </Button>
+            ) : (
+              <Button onClick={onRun} size="sm" variant={isRunning ? "destructive" : "default"}>
+                {isRunning ? (
+                  <><Square className="mr-2 h-4 w-4" /> Stop</>
+                ) : (
+                  <><Play className="mr-2 h-4 w-4" /> Run</>
+                )}
+              </Button>
+            )}
             <Button onClick={onSave} size="sm">
                 <Save className="mr-2 h-4 w-4" />
                 Save

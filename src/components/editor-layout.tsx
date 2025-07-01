@@ -280,6 +280,11 @@ export function EditorLayout() {
   }, [activeFile, currentContent, toast]);
 
   const handleRunCode = useCallback(() => {
+    if (activeFile?.language === 'Web') {
+      setActiveToolTab('preview');
+      return;
+    }
+
     if (isExecuting) {
       executionStateRef.current.isRunning = false;
       setIsExecuting(false);
@@ -297,7 +302,7 @@ export function EditorLayout() {
     toast({ title: 'Execution Started' });
 
     continueExecution('');
-  }, [isExecuting, continueExecution, toast]);
+  }, [isExecuting, continueExecution, toast, activeFile]);
 
   const handleExecuteInput = useCallback((input: string) => {
     if (!isWaitingForInput) return;

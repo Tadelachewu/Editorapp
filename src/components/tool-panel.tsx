@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send, Terminal } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -54,6 +54,7 @@ export function ToolPanel({
   const executionOutputRef = useRef<HTMLDivElement>(null);
   const [executionInput, setExecutionInput] = useState('');
 
+  const isWebApp = file?.language === 'Web';
 
   useEffect(() => {
     // Reset chat when file changes
@@ -176,7 +177,11 @@ export function ToolPanel({
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="agent"><MessageSquare className="w-4 h-4 mr-1" /> Agent</TabsTrigger>
-            <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
+            {isWebApp ? (
+              <TabsTrigger value="preview"><Eye className="w-4 h-4 mr-1" /> Preview</TabsTrigger>
+            ) : (
+              <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
+            )}
             <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> Improvements</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
           </TabsList>
@@ -236,54 +241,65 @@ export function ToolPanel({
             </form>
           </TabsContent>
 
-          <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-            <Card className="flex-1 flex flex-col">
-              <CardHeader className="py-3 px-4 border-b">
-                <CardTitle className="flex items-center gap-2 text-base font-medium">
-                  <Terminal className="w-5 h-5" />
-                  Output
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 p-0 flex flex-col min-h-0">
-                {executionTranscript === '' && !isExecuting ? (
-                  <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
-                    <p>Output from your code will appear here.</p>
-                    <p className="text-xs">Click the "Run" button in the editor to start.</p>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col min-h-0 font-mono text-sm bg-secondary">
-                    <ScrollArea className="flex-1" ref={executionOutputRef}>
-                      <pre className="whitespace-pre-wrap break-words p-4">
-                        {executionTranscript}
-                      </pre>
-                      {isExecuting && !isWaitingForInput && (
-                        <div className="flex items-center text-muted-foreground px-4 pb-2">
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          <span>Executing...</span>
-                        </div>
+          {isWebApp ? (
+            <TabsContent value="preview" className="flex-1 mt-2 min-h-0">
+              <iframe
+                srcDoc={content}
+                title="Browser Preview"
+                className="w-full h-full border-0 rounded-md bg-white"
+                sandbox="allow-scripts allow-modals allow-forms"
+              />
+            </TabsContent>
+          ) : (
+            <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
+              <Card className="flex-1 flex flex-col">
+                <CardHeader className="py-3 px-4 border-b">
+                  <CardTitle className="flex items-center gap-2 text-base font-medium">
+                    <Terminal className="w-5 h-5" />
+                    Output
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 p-0 flex flex-col min-h-0">
+                  {executionTranscript === '' && !isExecuting ? (
+                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                      <p>Output from your code will appear here.</p>
+                      <p className="text-xs">Click the "Run" button in the editor to start.</p>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col min-h-0 font-mono text-sm bg-secondary">
+                      <ScrollArea className="flex-1" ref={executionOutputRef}>
+                        <pre className="whitespace-pre-wrap break-words p-4">
+                          {executionTranscript}
+                        </pre>
+                        {isExecuting && !isWaitingForInput && (
+                          <div className="flex items-center text-muted-foreground px-4 pb-2">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <span>Executing...</span>
+                          </div>
+                        )}
+                      </ScrollArea>
+                      {isWaitingForInput && (
+                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background">
+                          <Input
+                            value={executionInput}
+                            onChange={(e) => setExecutionInput(e.target.value)}
+                            className="flex-1 h-9"
+                            placeholder="Type your input here..."
+                            autoFocus
+                            spellCheck="false"
+                          />
+                          <Button type="submit" size="icon" className="h-9 w-9">
+                            <Send className="w-4 h-4" />
+                            <span className="sr-only">Send Input</span>
+                          </Button>
+                        </form>
                       )}
-                    </ScrollArea>
-                    {isWaitingForInput && (
-                      <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background">
-                        <Input
-                          value={executionInput}
-                          onChange={(e) => setExecutionInput(e.target.value)}
-                          className="flex-1 h-9"
-                          placeholder="Type your input here..."
-                          autoFocus
-                          spellCheck="false"
-                        />
-                        <Button type="submit" size="icon" className="h-9 w-9">
-                          <Send className="w-4 h-4" />
-                          <span className="sr-only">Send Input</span>
-                        </Button>
-                      </form>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="improvements" className="flex-1 mt-4 overflow-y-auto flex flex-col items-center justify-center text-center">
             {isLoading ? (
