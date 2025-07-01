@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
 import { generateCodeImprovements } from '@/ai/flows/generate-code-improvements';
-import { chatWithCode } from '@/ai/flows/chat-with-code';
+import { chatWithCode, type ChatWithCodeOutput } from '@/ai/flows/chat-with-code';
 import type { ProjectItem, DbVersion } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -99,13 +99,23 @@ export function ToolPanel({
     setChatInput('');
     setIsChatting(true);
 
+    const TIMEOUT_DURATION = 30000; // 30 seconds
+
     try {
-      const result = await chatWithCode({
-        code: content,
-        language: file.language,
-        message: currentInput,
-        history: chatMessages,
-      });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out.')), TIMEOUT_DURATION)
+      );
+
+      const result = await Promise.race([
+        chatWithCode({
+          code: content,
+          language: file.language,
+          message: currentInput,
+          history: chatMessages,
+        }),
+        timeoutPromise
+      ]) as ChatWithCodeOutput;
+
       const assistantMessage = { role: 'assistant' as const, content: result.response };
       setChatMessages(prev => [...prev, assistantMessage]);
 
@@ -114,9 +124,21 @@ export function ToolPanel({
       }
     } catch (error) {
       console.error(error);
-      const errorMessage = { role: 'assistant' as const, content: "Sorry, I couldn't get a response. Please try again." };
+      
+      const errorMessageContent = error instanceof Error && error.message.includes('timed out')
+        ? "Sorry, the request took too long and timed out. Please try again."
+        : "Sorry, I couldn't get a response. Please try again.";
+      
+      const errorMessage = { role: 'assistant' as const, content: errorMessageContent };
       setChatMessages(prev => [...prev, errorMessage]);
-      toast({ variant: "destructive", title: "Error", description: "Failed to get response from AI agent." });
+      
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: error instanceof Error && error.message.includes('timed out') 
+            ? "The AI agent timed out." 
+            : "Failed to get response from AI agent." 
+      });
     } finally {
       setIsChatting(false);
     }
