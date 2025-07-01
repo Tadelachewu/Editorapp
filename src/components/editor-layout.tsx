@@ -228,6 +228,7 @@ export function EditorLayout() {
     }
 
     let hasMore = true;
+    let shouldPauseForInput = false;
     try {
       while (executionStateRef.current.isRunning && hasMore) {
         const result = await executeCode({
@@ -247,6 +248,7 @@ export function EditorLayout() {
         hasMore = result.hasMoreOutput;
 
         if (result.isWaitingForInput) {
+          shouldPauseForInput = true;
           setIsWaitingForInput(true);
           return; 
         }
@@ -257,7 +259,7 @@ export function EditorLayout() {
       setExecutionTranscript(prev => prev + `\n[ERROR: ${description}]`);
       toast({ variant: 'destructive', title: 'Execution Error', description });
     } finally {
-      if (!isWaitingForInput) {
+      if (!shouldPauseForInput) {
         if (executionStateRef.current.isRunning) {
             setExecutionTranscript(prev => {
                 const trimmedPrev = prev.trim();
@@ -275,7 +277,7 @@ export function EditorLayout() {
         executionStateRef.current.isRunning = false;
       }
     }
-  }, [activeFile, currentContent, toast, isWaitingForInput]);
+  }, [activeFile, currentContent, toast]);
 
   const handleRunCode = useCallback(() => {
     if (isExecuting) {
