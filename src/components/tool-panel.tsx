@@ -152,7 +152,7 @@ export function ToolPanel({
 
   const handleExecutionInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!executionInput.trim()) return;
+    if (!isWaitingForInput) return;
     onExecuteInput(executionInput);
     setExecutionInput('');
   };
@@ -238,15 +238,15 @@ export function ToolPanel({
 
           <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
             {executionTranscript === '' && !isExecuting ? (
-                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center rounded-md bg-secondary">
+                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center rounded-md bg-black">
                     <Terminal className="w-8 h-8 mx-auto mb-2" />
                     <p className="font-semibold">Terminal</p>
                     <p>Click the "Run" button in the editor to execute your code.</p>
                 </div>
             ) : (
-                <div className="flex-1 flex flex-col min-h-0 bg-secondary rounded-md">
+                <div className="flex-1 flex flex-col min-h-0 bg-black text-white rounded-md font-mono text-sm">
                     <ScrollArea className="flex-1 p-4" ref={executionOutputRef}>
-                        <pre className="whitespace-pre-wrap break-words font-mono text-sm">
+                        <pre className="whitespace-pre-wrap break-words">
                             {executionTranscript}
                         </pre>
                         {isExecuting && !isWaitingForInput && (
@@ -257,15 +257,16 @@ export function ToolPanel({
                         )}
                     </ScrollArea>
                     {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2">
+                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t border-border p-2">
+                            <span className="text-gray-400">&gt;</span>
                              <Input
                                 value={executionInput}
                                 onChange={(e) => setExecutionInput(e.target.value)}
-                                placeholder="Enter input..."
-                                className="flex-1"
+                                className="flex-1 bg-transparent p-0 border-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                                 autoFocus
+                                spellCheck="false"
                              />
-                             <Button type="submit">Send</Button>
+                             <button type="submit" className="hidden" aria-hidden="true" />
                         </form>
                     )}
                 </div>
