@@ -247,7 +247,7 @@ export function ToolPanel({
                 srcDoc={content}
                 title="Browser Preview"
                 className="w-full h-full border-0 rounded-md bg-white"
-                sandbox="allow-scripts allow-modals allow-forms"
+                sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
               />
             </TabsContent>
           ) : (
