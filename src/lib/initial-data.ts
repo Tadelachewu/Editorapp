@@ -22,6 +22,8 @@ export const initialItems: ProjectItem[] = [
   { id: '8', name: 'main.go', parentId: 'folder-go', itemType: 'file', fileType: 'go', language: 'Go' },
   { id: '9', name: 'server.js', parentId: 'folder-nodejs', itemType: 'file', fileType: 'js', language: 'Node.js' },
   { id: '10', name: 'index.html', parentId: 'folder-web', itemType: 'file', fileType: 'html', language: 'Web' },
+  { id: '11', name: 'style.css', parentId: 'folder-web', itemType: 'file', fileType: 'html', language: 'Web' }, // Using 'html' filetype for simplicity
+  { id: '12', name: 'script.js', parentId: 'folder-web', itemType: 'file', fileType: 'html', language: 'Web' }, // Using 'html' filetype for simplicity
 ];
 
 export const languages: Language[] = ['C++', 'React Native', 'Python', 'JavaScript', 'Java', 'Go', 'Node.js', 'Web'];
@@ -141,30 +143,39 @@ const webIndexContent = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello Web</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #333;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1 id="greeting">Hello, Web!</h1>
-    <script>
-        document.getElementById('greeting').addEventListener('click', () => {
-            alert('You clicked the heading!');
-        });
-    </script>
+    <h1>Hello, Web!</h1>
+    <p>Click the heading to see an alert.</p>
+    <script src="script.js"></script>
 </body>
 </html>`;
+
+const webCssContent = `body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+h1 {
+    color: #333;
+    cursor: pointer;
+}
+p {
+    color: #666;
+}`;
+
+const webJsContent = `document.getElementById('greeting').addEventListener('click', () => {
+    alert('You clicked the heading!');
+});
+
+console.log("External script loaded successfully!");
+`;
 
 
 export const initialContent: FileContentStore = {
@@ -178,6 +189,8 @@ export const initialContent: FileContentStore = {
   '8': goContent,
   '9': nodeServerContent,
   '10': webIndexContent,
+  '11': webCssContent,
+  '12': webJsContent,
 };
 
 export const fileTemplates: Record<Language, string> = {
@@ -278,4 +291,6 @@ export const initialHistorySeed: Record<string, { content: string; timestamp: Da
   '8': [{ content: goContent, timestamp: new Date() }],
   '9': [{ content: nodeServerContent, timestamp: new Date() }],
   '10': [{ content: webIndexContent, timestamp: new Date() }],
+  '11': [{ content: webCssContent, timestamp: new Date() }],
+  '12': [{ content: webJsContent, timestamp: new Date() }],
 };

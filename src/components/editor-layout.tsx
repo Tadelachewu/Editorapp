@@ -359,6 +359,7 @@ export function EditorLayout() {
                 key={activeFileId}
                 file={activeFile}
                 content={currentContent}
+                allItems={allItems || []}
                 history={activeFileHistory || []}
                 onRevert={handleRevert}
                 activeTab={activeToolTab}

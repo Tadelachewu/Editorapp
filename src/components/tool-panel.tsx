@@ -14,10 +14,13 @@ import { chatWithCode, type ChatWithCodeOutput } from '@/ai/flows/chat-with-code
 import type { ProjectItem, DbVersion } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { db } from '@/lib/db';
+
 
 interface ToolPanelProps {
   file: ProjectItem | undefined;
   content: string;
+  allItems: ProjectItem[];
   history: DbVersion[];
   onRevert: (versionId: number) => void;
   activeTab: string;
@@ -32,6 +35,7 @@ interface ToolPanelProps {
 export function ToolPanel({
   file,
   content,
+  allItems,
   history,
   onRevert,
   activeTab,
@@ -54,26 +58,78 @@ export function ToolPanel({
   const executionOutputRef = useRef<HTMLDivElement>(null);
   const [executionInput, setExecutionInput] = useState('');
 
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const isWebApp = file?.language === 'Web';
 
-  const iframeSrc = useMemo(() => {
-    if (!isWebApp) return undefined;
-    try {
-      const blob = new Blob([content], { type: 'text/html' });
-      return URL.createObjectURL(blob);
-    } catch (e) {
-      return undefined;
-    }
-  }, [content, isWebApp]);
-
   useEffect(() => {
-    // This effect handles the cleanup of the generated blob URL to prevent memory leaks.
-    return () => {
-      if (iframeSrc) {
-        URL.revokeObjectURL(iframeSrc);
+    let url: string | undefined;
+
+    const generatePreview = async () => {
+      if (activeTab !== 'preview' || !file || !isWebApp || !allItems.length) {
+        return;
+      }
+
+      try {
+        const parentId = file.parentId;
+        let processedHtml = content;
+
+        if (parentId) {
+            const siblingFiles = allItems.filter(item => item.parentId === parentId && item.itemType === 'file' && item.id !== file.id);
+            if (siblingFiles.length > 0) {
+              const fileContents = await db.fileContents.bulkGet(siblingFiles.map(f => f.id));
+              
+              const fileContentMap = new Map<string, string>();
+              siblingFiles.forEach((siblingFile, index) => {
+                  if (fileContents && fileContents[index]) {
+                      fileContentMap.set(siblingFile.name, fileContents[index]!.content);
+                  }
+              });
+
+              // Inline CSS
+              const cssRegex = /<link[^>]*?href=["'](?<href>.*?.css)["'][^>]*>/gi;
+              for (const match of content.matchAll(cssRegex)) {
+                  const cssFileName = match.groups?.href.replace('./', '');
+                  if (cssFileName && fileContentMap.has(cssFileName)) {
+                      const cssContent = fileContentMap.get(cssFileName);
+                      processedHtml = processedHtml.replace(match[0], `<style>\n${cssContent}\n</style>`);
+                  }
+              }
+
+              // Inline JS
+              const jsRegex = /<script[^>]*?src=["'](?<src>.*?.js)["'][^>]*><\/script>/gi;
+              for (const match of content.matchAll(jsRegex)) {
+                  const jsFileName = match.groups?.src.replace('./', '');
+                  if (jsFileName && fileContentMap.has(jsFileName)) {
+                      const jsContent = fileContentMap.get(jsFileName);
+                      processedHtml = processedHtml.replace(match[0], `<script>\n${jsContent}\n</script>`);
+                  }
+              }
+            }
+        }
+        
+        const blob = new Blob([processedHtml], { type: 'text/html' });
+        url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+
+      } catch(e) {
+          console.error("Error generating web preview:", e);
+          toast({ variant: 'destructive', title: 'Preview Error', description: 'Could not generate the web preview.' });
+          const errorBlob = new Blob([`<h1>Preview Error</h1><p>${e}</p>`], { type: 'text/html' });
+          url = URL.createObjectURL(errorBlob);
+          setPreviewUrl(url);
       }
     };
-  }, [iframeSrc]);
+
+    generatePreview();
+
+    return () => {
+      if (url) {
+        URL.revokeObjectURL(url);
+        setPreviewUrl(undefined);
+      }
+    };
+  }, [activeTab, file, content, allItems, toast, isWebApp]);
+
 
   useEffect(() => {
     // Reset chat when file changes
@@ -263,8 +319,8 @@ export function ToolPanel({
           {isWebApp ? (
             <TabsContent value="preview" className="flex-1 mt-2 min-h-0">
               <iframe
-                key={iframeSrc}
-                src={iframeSrc}
+                key={previewUrl}
+                src={previewUrl}
                 title="Browser Preview"
                 className="w-full h-full border-0 rounded-md bg-white"
                 sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
