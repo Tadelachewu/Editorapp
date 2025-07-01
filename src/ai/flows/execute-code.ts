@@ -22,12 +22,8 @@ const ExecuteCodeInputSchema = z.object({
     .string()
     .optional()
     .describe(
-      'The existing transcript of the execution session, including any prior user input.'
+      'The existing transcript of the execution session, including all prior stdout and stdin.'
     ),
-  userInput: z
-    .string()
-    .optional()
-    .describe('The new line of input from the user to the program.'),
 });
 export type ExecuteCodeInput = z.infer<typeof ExecuteCodeInputSchema>;
 
@@ -58,48 +54,49 @@ const prompt = ai.definePrompt({
   name: 'executeCodePrompt',
   input: {schema: ExecuteCodeInputSchema},
   output: {schema: ExecuteCodeOutputSchema},
-  prompt: `You are a master-level code execution simulator. Your function is to perfectly mimic how a real computer terminal would execute the provided code. You will receive the code, the language, and the history of the execution so far. You must determine the *next* piece of output the program generates and whether it's waiting for user input.
+  prompt: `You are a master-level code execution simulator. Your function is to perfectly mimic how a real computer terminal would execute the provided code. You will receive the code, the language, and the history of the execution so far in the transcript. You must determine the *next* piece of output the program generates and whether it's waiting for user input.
 
 Your response MUST be a raw JSON object and nothing else.
 
 **CONTEXT**
 - Language: {{{language}}}
 - Code to simulate:
-\\\`\\\`\\\`{{{language}}}
+\`\`\`{{{language}}}
 {{{code}}}
-\\\`\\\`\\\`
+\`\`\`
 {{#if previousTranscript}}
-- Execution Transcript (This is the complete history of stdout and stdin so far. The program is already running.):
-\\\`\\\`\\\`
+- Execution Transcript: This is the complete history of stdout and stdin so far. The program state should be determined from this. If the program was waiting for input, the last line of the transcript is the user's typed input.
+\`\`\`
 {{{previousTranscript}}}
-\\\`\\\`\\\`
+\`\`\`
 {{/if}}
 
 **TASK**
 1.  Analyze the code and the current state based on the \`Execution Transcript\`.
-2.  Simulate the code's execution for **one step**. A "step" ends when the program either waits for user input or terminates.
-3.  Produce a JSON response describing the result of this step.
+2.  Simulate the code's execution, starting from where it last left off.
+3.  Your simulation MUST STOP at the very next point the program waits for user input (e.g., an \`input()\` call) or when the program terminates.
+4.  Produce a JSON response describing the result of this simulation step.
 
 **RULES FOR SIMULATION & JSON OUTPUT**
--   **\\\`output\\\` (string):** This field must contain the *exact* text the program prints to standard output in this step.
-    -   \\\`print()\\\` statements usually add a newline. For example, Python's \\\`print("hello")\\\` produces \\\`"hello\\\\n"\\\`.
-    -   \\\`input()\\\` prompts (like Python's \\\`input("Name: ")\\\`) DO NOT add a newline. The output should be just \\\`"Name: "\\\`.
-    -   Combine all consecutive print/output calls into a single \\\`output\\\` string before the program waits for input.
--   **\\\`isWaitingForInput\\\` (boolean):**
-    -   Set to \\\`true\\\` ONLY if the program has now PAUSED and is waiting for user input (e.g., after an \\\`input()\\\` call).
-    -   If \\\`true\`, the \\\`output\\\` field should contain any text that was printed *before* the program started waiting (e.g., the input prompt itself).
--   **\\\`hasMoreOutput\\\` (boolean):**
-    -   Set to \\\`true\\\` if the program is in a long loop and has more to print without user interaction.
-    -   Set to \\\`false\\\` if the program has finished OR if \\\`isWaitingForInput\\\` is \\\`true\`.
+-   **\`output\` (string):** This field must contain the *exact* text the program prints to standard output in this step.
+    -   Python's \`print("hello")\` produces \`"hello\\n"\`.
+    -   Python's \`input("Name: ")\` produces \`"Name: "\`. The prompt text does NOT have a newline.
+    -   Combine all consecutive print/output calls into a single \`output\` string before the program waits for input or finishes.
+-   **\`isWaitingForInput\` (boolean):**
+    -   Set to \`true\` ONLY if the program has now PAUSED and is waiting for the user to provide stdin.
+    -   If \`true\`, the \`output\` field should contain any text that was printed *before* the program started waiting (e.g., the input prompt itself).
+-   **\`hasMoreOutput\` (boolean):**
+    -   Set to \`true\` if the program is in a long loop and has more to print *without* needing more user input.
+    -   Set to \`false\` if the program has finished OR if \`isWaitingForInput\` is \`true\`.
 
 **EXAMPLE SESSION (Python)**
--   Code: \\\`name = input("Enter name: ")\\\\nprint(f"Hello, {name}")\\\`
+-   Code: \`name = input("Enter name: ")\\nprint(f"Hello, {name}")\`
 -   **Step 1 (Initial Run):**
-    -   Your Input: \\\`previousTranscript: ""\\\`
-    -   Your JSON Output: \\\`{ "output": "Enter name: ", "isWaitingForInput": true, "hasMoreOutput": false }\\\`
--   **Step 2 (User provides input):**
-    -   Your Input: \\\`previousTranscript: "Enter name: Alice\\\\n"\\\`
-    -   Your JSON Output: \\\`{ "output": "Hello, Alice\\\\n", "isWaitingForInput": false, "hasMoreOutput": false }\\\``,
+    -   Your Input: \`previousTranscript: ""\`
+    -   Your JSON Output: \`{ "output": "Enter name: ", "isWaitingForInput": true, "hasMoreOutput": false }\`
+-   **Step 2 (User provides input "Alice"):**
+    -   Your Input: \`previousTranscript: "Enter name: Alice\\n"\`
+    -   Your JSON Output: \`{ "output": "Hello, Alice\\n", "isWaitingForInput": false, "hasMoreOutput": false }\``,
 });
 
 const executeCodeFlow = ai.defineFlow(

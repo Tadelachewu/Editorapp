@@ -222,7 +222,7 @@ export function EditorLayout() {
     if (!activeFile || !activeFile.language || !currentContent) return;
 
     let currentTranscript = fromTranscript;
-    if (userInput) {
+    if (userInput !== undefined) {
       currentTranscript += userInput + '\n';
       setExecutionTranscript(currentTranscript);
     }
@@ -230,16 +230,14 @@ export function EditorLayout() {
     let hasMore = true;
     let shouldPauseForInput = false;
     try {
-      while (executionStateRef.current.isRunning && hasMore) {
+      while (executionStateRef.current.isRunning && hasMore && !shouldPauseForInput) {
         const result = await executeCode({
           code: currentContent,
           language: activeFile.language,
           previousTranscript: currentTranscript,
-          userInput: userInput,
         });
 
         if (!executionStateRef.current.isRunning) break;
-        userInput = undefined; 
 
         if (result.output) {
           currentTranscript += result.output;
@@ -250,7 +248,6 @@ export function EditorLayout() {
         if (result.isWaitingForInput) {
           shouldPauseForInput = true;
           setIsWaitingForInput(true);
-          return; 
         }
       }
     } catch (error) {
