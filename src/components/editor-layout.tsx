@@ -253,19 +253,29 @@ export function EditorLayout() {
       }
     } catch (error) {
       console.error("Execution error:", error);
-      const errMessage = (error instanceof Error ? error.message : "An unknown error occurred.");
-      setExecutionTranscript(prev => prev + `\n[ERROR: ${errMessage}]`);
-      toast({ variant: 'destructive', title: 'Execution Error', description: 'Something went wrong.' });
+      const description = "The AI simulator failed to return a valid response. This can happen with complex code. Please try again.";
+      setExecutionTranscript(prev => prev + `\n[ERROR: ${description}]`);
+      toast({ variant: 'destructive', title: 'Execution Error', description });
     } finally {
-      if (executionStateRef.current.isRunning && !isWaitingForInput) {
-        setExecutionTranscript(prev => (prev.endsWith('\n') ? prev : prev + '\n') + '[Program finished]');
-      }
       if (!isWaitingForInput) {
+        if (executionStateRef.current.isRunning) {
+            setExecutionTranscript(prev => {
+                const trimmedPrev = prev.trim();
+                if (trimmedPrev.startsWith('[ERROR:')) return prev;
+                
+                const finalMessage = trimmedPrev === '' ? '[Program finished with no output]' : '[Program finished]';
+                
+                if (!trimmedPrev.endsWith(finalMessage) && !trimmedPrev.endsWith('[Program finished]')) {
+                    return (prev.endsWith('\n') || prev === '' ? prev : prev + '\n') + finalMessage;
+                }
+                return prev;
+            });
+        }
         setIsExecuting(false);
         executionStateRef.current.isRunning = false;
       }
     }
-  }, [activeFile, currentContent, isWaitingForInput, toast]);
+  }, [activeFile, currentContent, toast, isWaitingForInput]);
 
   const handleRunCode = useCallback(() => {
     if (isExecuting) {
