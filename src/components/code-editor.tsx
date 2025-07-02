@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -87,19 +88,19 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>{file.name}</CardTitle>
           <CardDescription>Language: {file.language}</CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
             {isWebApp ? (
-              <Button onClick={onRun} size="sm">
+              <Button onClick={onRun} size="sm" className="flex-1 sm:flex-initial">
                 <Eye className="mr-2 h-4 w-4" />
                 Preview
               </Button>
             ) : (
-              <Button onClick={onRun} size="sm" variant={isRunning ? "destructive" : "default"}>
+              <Button onClick={onRun} size="sm" variant={isRunning ? "destructive" : "default"} className="flex-1 sm:flex-initial">
                 {isRunning ? (
                   <><Square className="mr-2 h-4 w-4" /> Stop</>
                 ) : (
@@ -107,7 +108,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
                 )}
               </Button>
             )}
-            <Button onClick={onSave} size="sm">
+            <Button onClick={onSave} size="sm" className="flex-1 sm:flex-initial">
                 <Save className="mr-2 h-4 w-4" />
                 Save
             </Button>

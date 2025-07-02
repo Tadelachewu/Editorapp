@@ -18,7 +18,8 @@ const CodeImprovementInputSchema = z.object({
 export type CodeImprovementInput = z.infer<typeof CodeImprovementInputSchema>;
 
 const CodeImprovementOutputSchema = z.object({
-  improvements: z.string().describe('The AI-generated suggestions for improving the code.'),
+  suggestions: z.string().describe('A human-readable summary of the improvements made to the code.'),
+  improvedCode: z.string().describe('The full, updated code with all improvements applied.'),
 });
 export type CodeImprovementOutput = z.infer<typeof CodeImprovementOutputSchema>;
 
@@ -27,19 +28,20 @@ const createCodeImprovementsFlow = (ai: Genkit, provider: 'google' | 'ollama') =
         name: `codeImprovementPrompt_${provider}`,
         input: {schema: CodeImprovementInputSchema},
         output: {schema: CodeImprovementOutputSchema},
-        prompt: `You are an AI code assistant that suggests improvements to the given code.
+        prompt: `You are an expert AI code assistant. Your task is to improve and refactor the given code based on best practices for quality, readability, and performance.
 
-      Provide clear and concise suggestions for improving the code quality, readability, and performance.
-      Consider best practices, common pitfalls, and alternative approaches.
+You will produce two outputs:
+1.  **improvedCode**: The complete, refactored code. This should be a drop-in replacement for the original code.
+2.  **suggestions**: A clear, concise, human-readable summary of the key improvements you made. This should be formatted as a list or bullet points.
 
-      Programming Language: {{{language}}}
+**Programming Language:** {{{language}}}
 
-      Code:
-      \`\`\`
-      {{{code}}}
-      \`\`\`
+**Original Code:**
+\`\`\`{{{language}}}
+{{{code}}}
+\`\`\`
 
-      Improvements:`,
+Now, generate the \`improvedCode\` and the \`suggestions\` in the specified JSON format.`,
     });
 
     return ai.defineFlow(

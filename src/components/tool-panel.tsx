@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,7 +49,7 @@ export function ToolPanel({
   onExecuteInput,
   useOllama,
 }: ToolPanelProps) {
-  const [improvements, setImprovements] = useState('');
+  const [improvementResult, setImprovementResult] = useState<{ suggestions: string; improvedCode: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -130,7 +131,7 @@ export function ToolPanel({
         setPreviewUrl(undefined);
       }
     };
-  }, [activeTab, file, content, allItems, toast, isWebApp]);
+  }, [activeTab, file, content, allItems, isWebApp]);
 
 
   useEffect(() => {
@@ -157,16 +158,26 @@ export function ToolPanel({
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
     setIsLoading(true);
-    setImprovements('');
+    setImprovementResult(null);
     try {
       const result = await generateCodeImprovements({ code: content, language: file.language }, { useOllama });
-      setImprovements(result.improvements);
+      setImprovementResult(result);
     } catch (error) {
       console.error(error);
       const description = error instanceof Error ? error.message : "Failed to generate improvements.";
       toast({ variant: "destructive", title: "Error", description });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApplyImprovements = () => {
+    if (improvementResult?.improvedCode) {
+      onCodeUpdate(improvementResult.improvedCode);
+      toast({
+        title: "Code Improved",
+        description: "The suggestions have been applied to the editor.",
+      });
     }
   };
 
@@ -241,14 +252,29 @@ export function ToolPanel({
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="agent"><MessageSquare className="w-4 h-4 mr-1" /> Agent</TabsTrigger>
+            <TabsTrigger value="agent">
+              <MessageSquare className="w-4 h-4 sm:mr-2"/>
+              <span className="hidden sm:inline">Agent</span>
+            </TabsTrigger>
             {isWebApp ? (
-              <TabsTrigger value="preview"><Eye className="w-4 h-4 mr-1" /> Preview</TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye className="w-4 h-4 sm:mr-2"/>
+                <span className="hidden sm:inline">Preview</span>
+              </TabsTrigger>
             ) : (
-              <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
+              <TabsTrigger value="output">
+                <Terminal className="w-4 h-4 sm:mr-2"/>
+                <span className="hidden sm:inline">Output</span>
+              </TabsTrigger>
             )}
-            <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> Improvements</TabsTrigger>
-            <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
+            <TabsTrigger value="improvements">
+              <Bot className="w-4 h-4 sm:mr-2"/>
+              <span className="hidden sm:inline">Improvements</span>
+            </TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="w-4 h-4 sm:mr-2"/>
+              <span className="hidden sm:inline">History</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
@@ -367,25 +393,33 @@ export function ToolPanel({
             </TabsContent>
           )}
 
-          <TabsContent value="improvements" className="flex-1 mt-4 overflow-y-auto flex flex-col items-center justify-center text-center">
+          <TabsContent value="improvements" className="flex-1 mt-2 flex flex-col min-h-0">
             {isLoading ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
-                </>
-            ) : improvements ? (
-                <ScrollArea className="w-full h-full">
-                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left">{improvements}</pre>
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
+              </div>
+            ) : improvementResult?.suggestions ? (
+              <div className="flex-1 flex flex-col min-h-0">
+                <ScrollArea className="flex-1 -mx-6 px-6">
+                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
-            ) : (
-                <>
-                  <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="font-semibold mb-2">Code Improvements</p>
-                  <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
-                  <Button onClick={handleGenerateImprovements}>
-                    Analyze Code
+                <div className="pt-2 border-t mt-2">
+                  <Button onClick={handleApplyImprovements} className="w-full">
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Apply Improvements
                   </Button>
-                </>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="font-semibold mb-2">Code Improvements</p>
+                <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
+                <Button onClick={handleGenerateImprovements}>
+                  Analyze Code
+                </Button>
+              </div>
             )}
           </TabsContent>
           <TabsContent value="history" className="flex-1 mt-4 overflow-y-auto">
