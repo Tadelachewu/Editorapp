@@ -358,7 +358,7 @@ export function EditorLayout() {
           />
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1 pb-14 md:pb-0">
-          <div className="flex flex-col md:flex-row h-full w-full">
+          <div className="flex flex-1 flex-col md:flex-row w-full min-h-0">
              <div className="md:hidden absolute top-2 left-2 z-20">
               <SidebarTrigger />
             </div>
