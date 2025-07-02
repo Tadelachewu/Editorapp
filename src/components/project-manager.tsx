@@ -6,6 +6,7 @@ import { Code, Folder, PlusCircle, Trash2, FolderPlus, FilePlus, RotateCw } from
 import {
   SidebarHeader,
   SidebarContent,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import type { ProjectItem, Language } from '@/lib/types';
 import { Button } from './ui/button';
@@ -21,6 +22,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from './ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 interface ProjectManagerProps {
@@ -30,6 +33,8 @@ interface ProjectManagerProps {
   onNewItem: (parentId: string | null) => void;
   onItemDelete: (id: string) => void;
   onResetProject: () => void;
+  useOllama: boolean;
+  onOllamaToggle: (value: boolean) => void;
 }
 
 interface TreeItem extends ProjectItem {
@@ -144,7 +149,7 @@ const ProjectTree = ({
 };
 
 
-export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, onItemDelete, onResetProject }: ProjectManagerProps) {
+export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, onItemDelete, onResetProject, useOllama, onOllamaToggle }: ProjectManagerProps) {
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -195,6 +200,27 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
                     setDeleteCandidate={setDeleteCandidate}
                 />
           )}
+        </div>
+        <div className='mt-auto p-2'>
+            <SidebarSeparator className="my-2" />
+            <div className="p-2 space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground">AI Settings</Label>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="ollama-toggle" className="text-sm">
+                        Use Ollama (Local)
+                    </Label>
+                    <Switch
+                        id="ollama-toggle"
+                        checked={useOllama}
+                        onCheckedChange={onOllamaToggle}
+                    />
+                </div>
+                 <p className="text-xs text-muted-foreground">
+                    {useOllama
+                      ? "Using local Ollama models. Ensure Ollama is running."
+                      : "Using Google AI. Ensure your API key is set."}
+                  </p>
+            </div>
         </div>
       </SidebarContent>
 

@@ -10,6 +10,7 @@ import { CodeEditor } from '@/components/code-editor';
 import { ToolPanel } from '@/components/tool-panel';
 import { NewFileDialog } from '@/components/new-file-dialog';
 import { useToast } from "@/hooks/use-toast";
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { db, resetDatabase } from '@/lib/db';
 import type { ProjectItem, FileContent, Language, FileType, DbVersion } from '@/lib/types';
 import { fileTemplates } from '@/lib/initial-data';
@@ -33,6 +34,8 @@ export function EditorLayout() {
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [executionTranscript, setExecutionTranscript] = useState('');
   const executionStateRef = useRef({ isRunning: false });
+
+  const [useOllama, setUseOllama] = useLocalStorage('useOllama', true);
   
   useEffect(() => {
     if (allItems && allItems.length > 0) {
@@ -235,7 +238,7 @@ export function EditorLayout() {
           code: currentContent,
           language: activeFile.language,
           previousTranscript: currentTranscript,
-        });
+        }, { useOllama });
 
         if (!executionStateRef.current.isRunning) break;
 
@@ -252,7 +255,7 @@ export function EditorLayout() {
       }
     } catch (error) {
       console.error("Execution error:", error);
-      const description = "The AI simulator failed to return a valid response. This can happen with complex code. Please try again.";
+      const description = error instanceof Error ? error.message : "The AI simulator failed to return a valid response. This can happen with complex code. Please try again.";
       setExecutionTranscript(prev => prev + `\n[ERROR: ${description}]`);
       toast({ variant: 'destructive', title: 'Execution Error', description });
     } finally {
@@ -274,7 +277,7 @@ export function EditorLayout() {
         executionStateRef.current.isRunning = false;
       }
     }
-  }, [activeFile, currentContent, toast]);
+  }, [activeFile, currentContent, toast, useOllama]);
 
   const handleRunCode = useCallback(() => {
     if (activeFile?.language === 'Web') {
@@ -334,6 +337,8 @@ export function EditorLayout() {
             onNewItem={openNewItemDialog}
             onItemDelete={handleDeleteItem}
             onResetProject={handleResetProject}
+            useOllama={useOllama}
+            onOllamaToggle={setUseOllama}
           />
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1">
@@ -349,6 +354,7 @@ export function EditorLayout() {
                 onSave={handleSave}
                 onRun={handleRunCode}
                 isRunning={isExecuting}
+                useOllama={useOllama}
               />
             </div>
             <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2">
@@ -366,6 +372,7 @@ export function EditorLayout() {
                 isWaitingForInput={isWaitingForInput}
                 executionTranscript={executionTranscript}
                 onExecuteInput={handleExecuteInput}
+                useOllama={useOllama}
               />
             </div>
           </div>

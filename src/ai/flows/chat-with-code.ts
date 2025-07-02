@@ -8,8 +8,8 @@
  * - ChatWithCodeOutput - The return type for the chatWithCode function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { googleAiInstance, ollamaAiInstance } from '@/ai/genkit';
+import { z, type Genkit } from 'genkit';
 
 const ChatMessageSchema = z.object({
     role: z.enum(['user', 'assistant']).describe("The role of the message sender, either 'user' or 'assistant'."),
@@ -30,17 +30,13 @@ const ChatWithCodeOutputSchema = z.object({
 });
 export type ChatWithCodeOutput = z.infer<typeof ChatWithCodeOutputSchema>;
 
-export async function chatWithCode(
-  input: ChatWithCodeInput
-): Promise<ChatWithCodeOutput> {
-  return chatWithCodeFlow(input);
-}
 
-const prompt = ai.definePrompt({
-  name: 'chatWithCodePrompt',
-  input: {schema: ChatWithCodeInputSchema},
-  output: {schema: ChatWithCodeOutputSchema},
-  system: `You are an expert AI programming assistant.
+const createChatWithCodeFlow = (ai: Genkit, provider: 'google' | 'ollama') => {
+  const prompt = ai.definePrompt({
+    name: `chatWithCodePrompt_${provider}`,
+    input: {schema: ChatWithCodeInputSchema},
+    output: {schema: ChatWithCodeOutputSchema},
+    system: `You are an expert AI programming assistant.
 Your purpose is to help the user with the provided code based on their request.
 You have two modes of operation: "Chat" and "Edit".
 
@@ -61,7 +57,7 @@ You have two modes of operation: "Chat" and "Edit".
 *   ALWAYS return the *entire file content* in 'updatedCode', not just a snippet.
 *   Your response directly updates the user's editor. Follow these instructions carefully.
 *   Consider the conversation history for context.`,
-  prompt: `The user is working on a file with the language "{{{language}}}".
+    prompt: `The user is working on a file with the language "{{{language}}}".
 
 {{#if history}}
 Here is the conversation history for context:
@@ -77,16 +73,37 @@ Here is the current code:
 
 The user's latest request is:
 "{{{message}}}"`,
-});
+  });
 
-const chatWithCodeFlow = ai.defineFlow(
-  {
-    name: 'chatWithCodeFlow',
-    inputSchema: ChatWithCodeInputSchema,
-    outputSchema: ChatWithCodeOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  return ai.defineFlow(
+    {
+      name: `chatWithCodeFlow_${provider}`,
+      inputSchema: ChatWithCodeInputSchema,
+      outputSchema: ChatWithCodeOutputSchema,
+    },
+    async input => {
+      const {output} = await prompt(input);
+      return output!;
+    }
+  );
+};
+
+const googleChatFlow = createChatWithCodeFlow(googleAiInstance, 'google');
+const ollamaChatFlow = createChatWithCodeFlow(ollamaAiInstance, 'ollama');
+
+export async function chatWithCode(
+  input: ChatWithCodeInput,
+  options: { useOllama: boolean }
+): Promise<ChatWithCodeOutput> {
+  if (options.useOllama) {
+    try {
+      const response = await fetch('http://127.0.0.1:11434');
+      if (!response.ok) throw new Error('Ollama server not running');
+      return await ollamaChatFlow(input);
+    } catch (e) {
+      console.error("Ollama not available.", e);
+      throw new Error("Ollama is enabled but the server is not reachable at http://127.0.0.1:11434. Please start the Ollama server.");
+    }
   }
-);
+  return googleChatFlow(input);
+}

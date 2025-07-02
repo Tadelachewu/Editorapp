@@ -30,6 +30,7 @@ interface ToolPanelProps {
   isWaitingForInput: boolean;
   executionTranscript: string;
   onExecuteInput: (input: string) => void;
+  useOllama: boolean;
 }
 
 export function ToolPanel({
@@ -45,6 +46,7 @@ export function ToolPanel({
   isWaitingForInput,
   executionTranscript,
   onExecuteInput,
+  useOllama,
 }: ToolPanelProps) {
   const [improvements, setImprovements] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -157,11 +159,12 @@ export function ToolPanel({
     setIsLoading(true);
     setImprovements('');
     try {
-      const result = await generateCodeImprovements({ code: content, language: file.language });
+      const result = await generateCodeImprovements({ code: content, language: file.language }, { useOllama });
       setImprovements(result.improvements);
     } catch (error) {
       console.error(error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to generate improvements." });
+      const description = error instanceof Error ? error.message : "Failed to generate improvements.";
+      toast({ variant: "destructive", title: "Error", description });
     } finally {
       setIsLoading(false);
     }
@@ -176,22 +179,13 @@ export function ToolPanel({
     setChatInput('');
     setIsChatting(true);
 
-    const TIMEOUT_DURATION = 30000; // 30 seconds
-
     try {
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out.')), TIMEOUT_DURATION)
-      );
-
-      const result = await Promise.race([
-        chatWithCode({
+      const result = await chatWithCode({
           code: content,
           language: file.language,
           message: currentInput,
           history: chatMessages,
-        }),
-        timeoutPromise
-      ]) as ChatWithCodeOutput;
+        }, { useOllama });
 
       const assistantMessage = { role: 'assistant' as const, content: result.response };
       setChatMessages(prev => [...prev, assistantMessage]);
@@ -202,9 +196,7 @@ export function ToolPanel({
     } catch (error) {
       console.error(error);
       
-      const errorMessageContent = error instanceof Error && error.message.includes('timed out')
-        ? "Sorry, the request took too long and timed out. Please try again."
-        : "Sorry, I couldn't get a response. Please try again.";
+      const errorMessageContent = error instanceof Error ? error.message : "Sorry, I couldn't get a response. Please try again.";
       
       const errorMessage = { role: 'assistant' as const, content: errorMessageContent };
       setChatMessages(prev => [...prev, errorMessage]);
@@ -212,9 +204,7 @@ export function ToolPanel({
       toast({ 
         variant: "destructive", 
         title: "Error", 
-        description: error instanceof Error && error.message.includes('timed out') 
-            ? "The AI agent timed out." 
-            : "Failed to get response from AI agent." 
+        description: error instanceof Error ? error.message : "Failed to get response from AI agent." 
       });
     } finally {
       setIsChatting(false);

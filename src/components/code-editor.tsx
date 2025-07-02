@@ -16,6 +16,7 @@ interface CodeEditorProps {
   onSave: () => void;
   onRun: () => void;
   isRunning: boolean;
+  useOllama: boolean;
 }
 
 const languageMap: Record<Language, string> = {
@@ -29,7 +30,7 @@ const languageMap: Record<Language, string> = {
   'Web': 'html',
 };
 
-export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning }: CodeEditorProps) {
+export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning, useOllama }: CodeEditorProps) {
   const monacoInstance = useMonaco();
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
           const result = await generateCodeSuggestions({
             codeSnippet: code,
             fileType: file.fileType!,
-          });
+          }, { useOllama });
 
           if (result && result.suggestion) {
             return {
@@ -57,6 +58,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
             };
           }
         } catch (error) {
+          // Fail silently for inline suggestions, but log the error for debugging
           console.error('Error fetching AI suggestions:', error);
         }
 
@@ -68,7 +70,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
     return () => {
       provider.dispose();
     };
-  }, [monacoInstance, file]);
+  }, [monacoInstance, file, useOllama]);
 
   if (!file || file.itemType !== 'file') {
     return (

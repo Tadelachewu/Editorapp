@@ -8,8 +8,8 @@
  * - ExecuteCodeOutput - The return type for the executeCode function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { googleAiInstance, ollamaAiInstance } from '@/ai/genkit';
+import { z, type Genkit } from 'genkit';
 
 const ExecuteCodeInputSchema = z.object({
   code: z.string().describe('The code block to be executed.'),
@@ -44,17 +44,13 @@ const ExecuteCodeOutputSchema = z.object({
 });
 export type ExecuteCodeOutput = z.infer<typeof ExecuteCodeOutputSchema>;
 
-export async function executeCode(
-  input: ExecuteCodeInput
-): Promise<ExecuteCodeOutput> {
-  return executeCodeFlow(input);
-}
 
-const prompt = ai.definePrompt({
-  name: 'executeCodePrompt',
-  input: {schema: ExecuteCodeInputSchema},
-  output: {schema: ExecuteCodeOutputSchema},
-  prompt: `You are a master-level code execution simulator. Your function is to perfectly mimic how a real computer terminal would execute the provided code. You will receive the code, the language, and the history of the execution so far in the transcript. You must determine the *next* piece of output the program generates and whether it's waiting for user input.
+const createExecuteCodeFlow = (ai: Genkit, provider: 'google' | 'ollama') => {
+  const prompt = ai.definePrompt({
+    name: `executeCodePrompt_${provider}`,
+    input: {schema: ExecuteCodeInputSchema},
+    output: {schema: ExecuteCodeOutputSchema},
+    prompt: `You are a master-level code execution simulator. Your function is to perfectly mimic how a real computer terminal would execute the provided code. You will receive the code, the language, and the history of the execution so far in the transcript. You must determine the *next* piece of output the program generates and whether it's waiting for user input.
 
 Your response MUST be a raw JSON object and nothing else.
 
@@ -97,16 +93,37 @@ Your response MUST be a raw JSON object and nothing else.
 -   **Step 2 (User provides input "Alice"):**
     -   Your Input: \`previousTranscript: "Enter name: Alice\\n"\`
     -   Your JSON Output: \`{ "output": "Hello, Alice\\n", "isWaitingForInput": false, "hasMoreOutput": false }\``,
-});
+  });
 
-const executeCodeFlow = ai.defineFlow(
-  {
-    name: 'executeCodeFlow',
-    inputSchema: ExecuteCodeInputSchema,
-    outputSchema: ExecuteCodeOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  return ai.defineFlow(
+    {
+      name: `executeCodeFlow_${provider}`,
+      inputSchema: ExecuteCodeInputSchema,
+      outputSchema: ExecuteCodeOutputSchema,
+    },
+    async input => {
+      const {output} = await prompt(input);
+      return output!;
+    }
+  );
+};
+
+const googleExecuteCodeFlow = createExecuteCodeFlow(googleAiInstance, 'google');
+const ollamaExecuteCodeFlow = createExecuteCodeFlow(ollamaAiInstance, 'ollama');
+
+export async function executeCode(
+  input: ExecuteCodeInput,
+  options: { useOllama: boolean }
+): Promise<ExecuteCodeOutput> {
+  if (options.useOllama) {
+    try {
+      const response = await fetch('http://127.0.0.1:11434');
+      if (!response.ok) throw new Error('Ollama server not running');
+      return await ollamaExecuteCodeFlow(input);
+    } catch (e) {
+      console.error("Ollama not available.", e);
+      throw new Error("Ollama is enabled but the server is not reachable at http://127.0.0.1:11434. Please start the Ollama server.");
+    }
   }
-);
+  return googleExecuteCodeFlow(input);
+}
