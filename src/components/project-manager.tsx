@@ -25,6 +25,7 @@ import { Skeleton } from './ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface ProjectManagerProps {
@@ -87,6 +88,7 @@ const ProjectTree = ({
     onFileSelect,
     onNewItem,
     setDeleteCandidate,
+    isMobile,
     level = 0
 }: {
     nodes: TreeItem[];
@@ -94,6 +96,7 @@ const ProjectTree = ({
     onFileSelect: (id: string) => void;
     onNewItem: (parentId: string | null) => void;
     setDeleteCandidate: (id: string | null) => void;
+    isMobile: boolean;
     level?: number;
 }) => {
     return (
@@ -108,7 +111,7 @@ const ProjectTree = ({
                                     <span className="truncate">{node.name}</span>
                                 </div>
                             </CollapsibleTrigger>
-                            <div className="hidden group-hover:flex items-center gap-1">
+                            <div className={cn("items-center gap-1", isMobile ? 'flex' : 'hidden group-hover:flex')}>
                                 <Button variant="ghost" size="icon" className="w-6 h-6" onClick={(e) => {e.stopPropagation(); onNewItem(node.id)}}>
                                     <FilePlus className="w-4 h-4" />
                                 </Button>
@@ -127,6 +130,7 @@ const ProjectTree = ({
                                 onFileSelect={onFileSelect}
                                 onNewItem={onNewItem}
                                 setDeleteCandidate={setDeleteCandidate}
+                                isMobile={isMobile}
                                 level={level + 1}
                             />
                         </CollapsibleContent>
@@ -139,7 +143,7 @@ const ProjectTree = ({
                             <LanguageIcon language={node.language} />
                             <span className="truncate">{node.name}</span>
                         </div>
-                        <Button variant="ghost" size="icon" className="w-6 h-6 hidden group-hover:flex" onClick={(e) => { e.stopPropagation(); setDeleteCandidate(node.id);}}>
+                        <Button variant="ghost" size="icon" className={cn("w-6 h-6", isMobile ? 'flex' : 'hidden group-hover:flex')} onClick={(e) => { e.stopPropagation(); setDeleteCandidate(node.id);}}>
                             <Trash2 className="w-4 h-4" />
                         </Button>
                     </div>
@@ -153,6 +157,7 @@ const ProjectTree = ({
 export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, onItemDelete, onResetProject, useOllama, onOllamaToggle }: ProjectManagerProps) {
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const isMobile = useIsMobile();
 
   const fileTree = useMemo(() => (items ? buildTree(items) : []), [items]);
   const itemToDelete = items.find(f => f.id === deleteCandidate);
@@ -199,6 +204,7 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
                     onFileSelect={onFileSelect}
                     onNewItem={onNewItem}
                     setDeleteCandidate={setDeleteCandidate}
+                    isMobile={isMobile}
                 />
           )}
         </div>
