@@ -131,7 +131,7 @@ export function ToolPanel({
         setPreviewUrl(undefined);
       }
     };
-  }, [activeTab, file, content, allItems, toast, isWebApp]);
+  }, [activeTab, file, content, allItems, isWebApp]);
 
 
   useEffect(() => {

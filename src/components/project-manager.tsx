@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Code, Folder, PlusCircle, Trash2, FolderPlus, FilePlus, RotateCw } from 'lucide-react';
 import {
@@ -154,7 +154,7 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const fileTree = items ? buildTree(items) : [];
+  const fileTree = useMemo(() => (items ? buildTree(items) : []), [items]);
   const itemToDelete = items.find(f => f.id === deleteCandidate);
 
   return (
