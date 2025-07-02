@@ -363,7 +363,7 @@ export function EditorLayout() {
               <SidebarTrigger />
             </div>
             <div className={cn(
-              "w-full h-full flex flex-col p-1 sm:p-2 md:w-1/2",
+              "w-full flex flex-col p-1 sm:p-2 md:w-1/2 flex-1",
               isMobile ? (activeMobileView === 'editor' ? 'flex' : 'hidden') : 'flex'
             )}>
               <CodeEditor
@@ -377,7 +377,7 @@ export function EditorLayout() {
               />
             </div>
             <div className={cn(
-              "w-full h-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2",
+              "w-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2 flex-1",
               isMobile ? (activeMobileView === 'tools' ? 'flex' : 'hidden') : 'flex'
             )}>
               <ToolPanel
