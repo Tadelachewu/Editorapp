@@ -359,44 +359,44 @@ export function EditorLayout() {
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1 pb-14 md:pb-0">
           <div className="flex flex-1 flex-col md:flex-row w-full min-h-0">
-             <div className="md:hidden absolute top-2 left-2 z-20">
+            <div className="md:hidden absolute top-2 left-2 z-20">
               <SidebarTrigger />
             </div>
-            <div className={cn(
-              "w-full flex flex-col p-1 sm:p-2 md:w-1/2 flex-1",
-              isMobile ? (activeMobileView === 'editor' ? 'flex' : 'hidden') : 'flex'
-            )}>
-              <CodeEditor
-                file={activeFile}
-                content={currentContent}
-                onContentChange={handleContentChange}
-                onSave={handleSave}
-                onRun={handleRunCode}
-                isRunning={isExecuting}
-                useOllama={useOllama}
-              />
-            </div>
-            <div className={cn(
-              "w-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2 flex-1",
-              isMobile ? (activeMobileView === 'tools' ? 'flex' : 'hidden') : 'flex'
-            )}>
-              <ToolPanel
-                key={activeFileId}
-                file={activeFile}
-                content={currentContent}
-                allItems={allItems || []}
-                history={activeFileHistory || []}
-                onRevert={handleRevert}
-                activeTab={activeToolTab}
-                onTabChange={setActiveToolTab}
-                onCodeUpdate={handleCodeUpdate}
-                isExecuting={isExecuting}
-                isWaitingForInput={isWaitingForInput}
-                executionTranscript={executionTranscript}
-                onExecuteInput={handleExecuteInput}
-                useOllama={useOllama}
-              />
-            </div>
+
+            {(!isMobile || activeMobileView === 'editor') && (
+              <div className="w-full flex flex-col p-1 sm:p-2 md:w-1/2 flex-1">
+                <CodeEditor
+                  file={activeFile}
+                  content={currentContent}
+                  onContentChange={handleContentChange}
+                  onSave={handleSave}
+                  onRun={handleRunCode}
+                  isRunning={isExecuting}
+                  useOllama={useOllama}
+                />
+              </div>
+            )}
+            
+            {(!isMobile || activeMobileView === 'tools') && (
+              <div className="w-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2 flex-1">
+                <ToolPanel
+                  key={activeFileId}
+                  file={activeFile}
+                  content={currentContent}
+                  allItems={allItems || []}
+                  history={activeFileHistory || []}
+                  onRevert={handleRevert}
+                  activeTab={activeToolTab}
+                  onTabChange={setActiveToolTab}
+                  onCodeUpdate={handleCodeUpdate}
+                  isExecuting={isExecuting}
+                  isWaitingForInput={isWaitingForInput}
+                  executionTranscript={executionTranscript}
+                  onExecuteInput={handleExecuteInput}
+                  useOllama={useOllama}
+                />
+              </div>
+            )}
           </div>
         </SidebarInset>
         {isMobile && (
