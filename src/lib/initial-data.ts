@@ -1,3 +1,4 @@
+
 import type { ProjectItem, FileContentStore, Language, FileType } from './types';
 
 export const initialItems: ProjectItem[] = [
@@ -146,7 +147,7 @@ const webIndexContent = `<!DOCTYPE html>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Hello, Web!</h1>
+    <h1 id="greeting">Hello, Web!</h1>
     <p>Click the heading to see an alert.</p>
     <script src="script.js"></script>
 </body>
