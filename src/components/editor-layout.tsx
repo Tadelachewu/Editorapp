@@ -357,13 +357,13 @@ export function EditorLayout() {
             onOllamaToggle={setUseOllama}
           />
         </Sidebar>
-        <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1 pb-14 lg:pb-0">
-          <div className="flex flex-col lg:flex-row h-full w-full">
+        <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1 pb-14 md:pb-0">
+          <div className="flex flex-col md:flex-row h-full w-full">
              <div className="md:hidden absolute top-2 left-2 z-20">
               <SidebarTrigger />
             </div>
             <div className={cn(
-              "w-full h-full flex flex-col p-1 sm:p-2 lg:w-1/2",
+              "w-full h-full flex flex-col p-1 sm:p-2 md:w-1/2",
               isMobile ? (activeMobileView === 'editor' ? 'flex' : 'hidden') : 'flex'
             )}>
               <CodeEditor
@@ -377,7 +377,7 @@ export function EditorLayout() {
               />
             </div>
             <div className={cn(
-              "w-full h-full flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2 lg:w-1/2",
+              "w-full h-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2",
               isMobile ? (activeMobileView === 'tools' ? 'flex' : 'hidden') : 'flex'
             )}>
               <ToolPanel
