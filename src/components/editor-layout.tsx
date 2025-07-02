@@ -363,8 +363,7 @@ export function EditorLayout() {
               <SidebarTrigger />
             </div>
 
-            {(!isMobile || activeMobileView === 'editor') && (
-              <div className="w-full flex flex-col p-1 sm:p-2 md:w-1/2 flex-1">
+            <div className={cn("w-full flex flex-col p-1 sm:p-2 md:w-1/2 flex-1", isMobile && activeMobileView !== 'editor' && "hidden")}>
                 <CodeEditor
                   file={activeFile}
                   content={currentContent}
@@ -373,12 +372,11 @@ export function EditorLayout() {
                   onRun={handleRunCode}
                   isRunning={isExecuting}
                   useOllama={useOllama}
+                  isVisible={!isMobile || activeMobileView === 'editor'}
                 />
-              </div>
-            )}
+            </div>
             
-            {(!isMobile || activeMobileView === 'tools') && (
-              <div className="w-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2 flex-1">
+            <div className={cn("w-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2 flex-1", isMobile && activeMobileView !== 'tools' && "hidden")}>
                 <ToolPanel
                   key={activeFileId}
                   file={activeFile}
@@ -395,8 +393,7 @@ export function EditorLayout() {
                   onExecuteInput={handleExecuteInput}
                   useOllama={useOllama}
                 />
-              </div>
-            )}
+            </div>
           </div>
         </SidebarInset>
         {isMobile && (

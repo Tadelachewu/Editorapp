@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { ProjectItem, Language } from '@/lib/types';
@@ -9,6 +9,7 @@ import { Save, Play, Square, Eye } from 'lucide-react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
 import type * as monaco from 'monaco-editor';
+import { cn } from '@/lib/utils';
 
 interface CodeEditorProps {
   file: ProjectItem | undefined;
@@ -18,6 +19,7 @@ interface CodeEditorProps {
   onRun: () => void;
   isRunning: boolean;
   useOllama: boolean;
+  isVisible: boolean;
 }
 
 const languageMap: Record<Language, string> = {
@@ -31,8 +33,22 @@ const languageMap: Record<Language, string> = {
   'Web': 'html',
 };
 
-export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning, useOllama }: CodeEditorProps) {
+export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning, useOllama, isVisible }: CodeEditorProps) {
   const monacoInstance = useMonaco();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+  const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+    editorRef.current = editor;
+  };
+  
+  useEffect(() => {
+    if (isVisible && editorRef.current) {
+      // Use a timeout to ensure the container has finished its resize animation/transition
+      setTimeout(() => {
+        editorRef.current?.layout();
+      }, 0);
+    }
+  }, [isVisible]);
 
   useEffect(() => {
     if (!monacoInstance || !file || file.itemType !== 'file' || !file.language || !file.fileType) return;
@@ -121,6 +137,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
           value={content}
           onChange={(value) => onContentChange(value || '')}
           theme="vs-dark"
+          onMount={handleEditorMount}
           options={{
             minimap: { enabled: true },
             fontSize: 14,
