@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -101,10 +102,10 @@ const ProjectTree = ({
                 node.itemType === 'folder' ? (
                     <Collapsible key={node.id} defaultOpen>
                         <div className="flex items-center group pr-2 rounded-md hover:bg-accent/50">
-                            <CollapsibleTrigger className="flex-1">
+                            <CollapsibleTrigger className="flex-1 overflow-hidden">
                                 <div className={cn("flex items-center gap-2 p-1.5 text-sm font-semibold")}>
                                     <Folder className="w-4 h-4" />
-                                    <span>{node.name}</span>
+                                    <span className="truncate">{node.name}</span>
                                 </div>
                             </CollapsibleTrigger>
                             <div className="hidden group-hover:flex items-center gap-1">
@@ -134,9 +135,9 @@ const ProjectTree = ({
                     <div key={node.id} className="flex items-center group pr-2 rounded-md hover:bg-accent/50"
                          onClick={() => onFileSelect(node.id)}
                     >
-                       <div className={cn("flex items-center gap-2 p-1.5 text-sm flex-1 cursor-pointer rounded-md", activeFileId === node.id && "bg-accent")}>
+                       <div className={cn("flex items-center gap-2 p-1.5 text-sm flex-1 cursor-pointer rounded-md overflow-hidden", activeFileId === node.id && "bg-accent")}>
                             <LanguageIcon language={node.language} />
-                            <span>{node.name}</span>
+                            <span className="truncate">{node.name}</span>
                         </div>
                         <Button variant="ghost" size="icon" className="w-6 h-6 hidden group-hover:flex" onClick={(e) => { e.stopPropagation(); setDeleteCandidate(node.id);}}>
                             <Trash2 className="w-4 h-4" />
