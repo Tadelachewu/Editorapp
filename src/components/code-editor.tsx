@@ -75,7 +75,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
 
   if (!file || file.itemType !== 'file') {
     return (
-      <Card className="h-full flex items-center justify-center">
+      <Card className="h-full w-full flex items-center justify-center">
         <CardContent>
           <p>Select a file to start editing.</p>
         </CardContent>
@@ -87,7 +87,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
   const isWebApp = file.language === 'Web';
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full w-full flex flex-col">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>{file.name}</CardTitle>
@@ -114,7 +114,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
             </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-0">
+      <CardContent className="flex-1 p-0 min-h-0">
         <Editor
           height="100%"
           language={monacoLanguage}
