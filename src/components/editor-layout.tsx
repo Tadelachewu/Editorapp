@@ -15,6 +15,10 @@ import { db, resetDatabase } from '@/lib/db';
 import type { ProjectItem, FileContent, Language, FileType, DbVersion } from '@/lib/types';
 import { fileTemplates } from '@/lib/initial-data';
 import { executeCode } from '@/ai/flows/execute-code';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Code, Wrench } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 
 export function EditorLayout() {
@@ -37,6 +41,9 @@ export function EditorLayout() {
 
   const [useOllama, setUseOllama] = useLocalStorage('useOllama', true);
   
+  const isMobile = useIsMobile();
+  const [activeMobileView, setActiveMobileView] = useState<'editor' | 'tools'>('editor');
+
   useEffect(() => {
     if (allItems && allItems.length > 0) {
       const activeFileExists = allItems.some(f => f.id === activeFileId);
@@ -82,8 +89,11 @@ export function EditorLayout() {
     if (item?.itemType === 'file') {
       setActiveFileId(id);
       setActiveToolTab('agent');
+      if (isMobile) {
+        setActiveMobileView('editor');
+      }
     }
-  }, [allItems]);
+  }, [allItems, isMobile]);
 
   const handleContentChange = useCallback((content: string) => {
     setCurrentContent(content);
@@ -282,6 +292,9 @@ export function EditorLayout() {
   const handleRunCode = useCallback(() => {
     if (activeFile?.language === 'Web') {
       setActiveToolTab('preview');
+       if (isMobile) {
+        setActiveMobileView('tools');
+      }
       return;
     }
 
@@ -299,10 +312,13 @@ export function EditorLayout() {
     setIsWaitingForInput(false);
     setExecutionTranscript('');
     setActiveToolTab('output');
+    if (isMobile) {
+      setActiveMobileView('tools');
+    }
     toast({ title: 'Execution Started' });
 
     continueExecution('');
-  }, [isExecuting, continueExecution, toast, activeFile]);
+  }, [isExecuting, continueExecution, toast, activeFile, isMobile]);
 
   const handleExecuteInput = useCallback((input: string) => {
     if (!isWaitingForInput) return;
@@ -341,12 +357,15 @@ export function EditorLayout() {
             onOllamaToggle={setUseOllama}
           />
         </Sidebar>
-        <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1">
+        <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1 pb-14 lg:pb-0">
           <div className="flex flex-col lg:flex-row h-full w-full">
              <div className="md:hidden absolute top-2 left-2 z-20">
               <SidebarTrigger />
             </div>
-            <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col p-1 sm:p-2">
+            <div className={cn(
+              "w-full h-full flex flex-col p-1 sm:p-2 lg:w-1/2",
+              isMobile ? (activeMobileView === 'editor' ? 'flex' : 'hidden') : 'flex'
+            )}>
               <CodeEditor
                 file={activeFile}
                 content={currentContent}
@@ -357,7 +376,10 @@ export function EditorLayout() {
                 useOllama={useOllama}
               />
             </div>
-            <div className="w-full h-1/2 lg:h-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2">
+            <div className={cn(
+              "w-full h-full flex flex-col border-t lg:border-t-0 lg:border-l border-border p-1 sm:p-2 lg:w-1/2",
+              isMobile ? (activeMobileView === 'tools' ? 'flex' : 'hidden') : 'flex'
+            )}>
               <ToolPanel
                 key={activeFileId}
                 file={activeFile}
@@ -377,6 +399,26 @@ export function EditorLayout() {
             </div>
           </div>
         </SidebarInset>
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border flex h-14 md:hidden z-10">
+            <Button
+              variant={activeMobileView === 'editor' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveMobileView('editor')}
+              className="flex-1 rounded-none h-full text-sm flex-col gap-1"
+            >
+              <Code className="w-5 h-5" />
+              Editor
+            </Button>
+            <Button
+              variant={activeMobileView === 'tools' ? 'secondary' : 'ghost'}
+              onClick={() => setActiveMobileView('tools')}
+              className="flex-1 rounded-none h-full text-sm flex-col gap-1"
+            >
+              <Wrench className="w-5 h-5" />
+              Tools
+            </Button>
+          </div>
+        )}
       </div>
     </SidebarProvider>
   );

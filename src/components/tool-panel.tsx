@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -241,14 +242,29 @@ export function ToolPanel({
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="agent"><MessageSquare className="w-4 h-4 mr-1" /> Agent</TabsTrigger>
+            <TabsTrigger value="agent">
+              <MessageSquare className="w-4 h-4 sm:mr-2"/>
+              <span className="hidden sm:inline">Agent</span>
+            </TabsTrigger>
             {isWebApp ? (
-              <TabsTrigger value="preview"><Eye className="w-4 h-4 mr-1" /> Preview</TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye className="w-4 h-4 sm:mr-2"/>
+                <span className="hidden sm:inline">Preview</span>
+              </TabsTrigger>
             ) : (
-              <TabsTrigger value="output"><Terminal className="w-4 h-4 mr-1" /> Output</TabsTrigger>
+              <TabsTrigger value="output">
+                <Terminal className="w-4 h-4 sm:mr-2"/>
+                <span className="hidden sm:inline">Output</span>
+              </TabsTrigger>
             )}
-            <TabsTrigger value="improvements"><Bot className="w-4 h-4 mr-1" /> Improvements</TabsTrigger>
-            <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> History</TabsTrigger>
+            <TabsTrigger value="improvements">
+              <Bot className="w-4 h-4 sm:mr-2"/>
+              <span className="hidden sm:inline">Improvements</span>
+            </TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="w-4 h-4 sm:mr-2"/>
+              <span className="hidden sm:inline">History</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
