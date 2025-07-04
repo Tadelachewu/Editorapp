@@ -369,7 +369,7 @@ function EditorLayoutContent() {
 
             {/* Editor Panel: Render on desktop OR when active on mobile */}
             {(!isMobile || activeMobileView === 'editor') && (
-              <div className="w-full flex-1 flex flex-col p-1 sm:p-2 md:w-1/2">
+              <div className="flex-1 flex flex-col p-1 sm:p-2 md:w-1/2 min-h-0">
                 <CodeEditor
                   file={activeFile}
                   content={currentContent}
@@ -384,7 +384,7 @@ function EditorLayoutContent() {
             
             {/* Tool Panel: Render on desktop OR when active on mobile */}
             {(!isMobile || activeMobileView === 'tools') && (
-              <div className="w-full flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2">
+              <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2 min-h-0">
                 <ToolPanel
                   key={activeFileId}
                   file={activeFile}
