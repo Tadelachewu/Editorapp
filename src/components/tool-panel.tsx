@@ -360,8 +360,8 @@ export function ToolPanel({
                       <p className="text-xs">Click the "Run" button in the editor to start.</p>
                   </div>
               ) : (
-                <>
-                  <ScrollArea className="flex-1 bg-muted/20 rounded-md" ref={executionOutputRef}>
+                <div className="flex-1 flex flex-col min-h-0">
+                  <ScrollArea className="flex-1 bg-muted/20 rounded-md">
                       <pre className="p-4 font-mono text-sm whitespace-pre">
                           {executionTranscript}
                           {isExecuting && !isWaitingForInput && (
@@ -373,22 +373,22 @@ export function ToolPanel({
                       </pre>
                   </ScrollArea>
                   {isWaitingForInput && (
-                      <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
+                      <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-1 pt-1 bg-background font-mono text-sm">
                           <Input
                               value={executionInput}
                               onChange={(e) => setExecutionInput(e.target.value)}
-                              className="flex-1 h-9"
+                              className="flex-1 h-8"
                               placeholder="Type your input here..."
                               autoFocus
                               spellCheck="false"
                           />
-                          <Button type="submit" size="icon" className="h-9 w-9">
+                          <Button type="submit" size="icon" className="h-8 w-8">
                               <Send className="w-4 h-4" />
                               <span className="sr-only">Send Input</span>
                           </Button>
                       </form>
                   )}
-                </>
+                </div>
               )}
             </TabsContent>
           )}
