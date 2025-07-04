@@ -103,9 +103,9 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
   const isWebApp = file.language === 'Web';
 
   return (
-    <Card className="flex-1 w-full flex flex-col">
+    <Card className="flex-1 w-full flex flex-col min-h-0">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="flex-1 min-w-0 overflow-x-auto py-1">
           <CardTitle>{file.name}</CardTitle>
           <CardDescription>Language: {file.language}</CardDescription>
         </div>
