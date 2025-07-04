@@ -252,29 +252,29 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-            <TabsTrigger value="agent" className="sm:w-auto">
-              <MessageSquare className="w-4 h-4 sm:mr-2"/>
-              <span className="hidden sm:inline">Agent</span>
+          <TabsList>
+            <TabsTrigger value="agent">
+              <MessageSquare className="mr-2 h-4 w-4"/>
+              Agent
             </TabsTrigger>
             {isWebApp ? (
-              <TabsTrigger value="preview" className="sm:w-auto">
-                <Eye className="w-4 h-4 sm:mr-2"/>
-                <span className="hidden sm:inline">Preview</span>
+              <TabsTrigger value="preview">
+                <Eye className="mr-2 h-4 w-4"/>
+                Preview
               </TabsTrigger>
             ) : (
-              <TabsTrigger value="output" className="sm:w-auto">
-                <Terminal className="w-4 h-4 sm:mr-2"/>
-                <span className="hidden sm:inline">Output</span>
+              <TabsTrigger value="output">
+                <Terminal className="mr-2 h-4 w-4"/>
+                Output
               </TabsTrigger>
             )}
-            <TabsTrigger value="improvements" className="sm:w-auto">
-              <Bot className="w-4 h-4 sm:mr-2"/>
-              <span className="hidden sm:inline">Improvements</span>
+            <TabsTrigger value="improvements">
+              <Bot className="mr-2 h-4 w-4"/>
+              Improvements
             </TabsTrigger>
-            <TabsTrigger value="history" className="sm:w-auto">
-              <History className="w-4 h-4 sm:mr-2"/>
-              <span className="hidden sm:inline">History</span>
+            <TabsTrigger value="history">
+              <History className="mr-2 h-4 w-4"/>
+              History
             </TabsTrigger>
           </TabsList>
           

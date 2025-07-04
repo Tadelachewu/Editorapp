@@ -123,7 +123,7 @@ const ProjectTree = ({
                                 </Button>
                             </div>
                         </div>
-                        <CollapsibleContent className={cn("pl-4 sm:pl-5")}>
+                        <CollapsibleContent className={cn("pl-2 sm:pl-5")}>
                             <ProjectTree
                                 nodes={node.children}
                                 activeFileId={activeFileId}
