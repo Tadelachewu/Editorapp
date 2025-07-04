@@ -242,7 +242,7 @@ export function ToolPanel({
   if (!file) {
     return (
         <Card className="h-full w-full flex items-center justify-center">
-            <CardContent>
+            <CardContent className="w-full">
                 <p>Select a file to see available tools.</p>
             </CardContent>
         </Card>
@@ -361,15 +361,15 @@ export function ToolPanel({
                     Output
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 p-0 flex flex-col min-h-0">
+                <CardContent className="flex-1 p-0 flex flex-col min-h-0 bg-secondary">
                   {executionTranscript === '' && !isExecuting ? (
-                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center bg-background">
                       <p>Output from your code will appear here.</p>
                       <p className="text-xs">Click the "Run" button in the editor to start.</p>
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col min-h-0 font-mono text-sm bg-secondary">
-                      <ScrollArea className="flex-1" ref={executionOutputRef}>
+                    <>
+                      <ScrollArea className="flex-1 font-mono text-sm" ref={executionOutputRef}>
                         <pre className="whitespace-pre-wrap break-words p-4">
                           {executionTranscript}
                         </pre>
@@ -381,7 +381,7 @@ export function ToolPanel({
                         )}
                       </ScrollArea>
                       {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background">
+                        <form onSubmit={handleExecutionInputSubmit} className="flex shrink-0 items-center gap-2 border-t p-2 bg-background font-mono text-sm">
                           <Input
                             value={executionInput}
                             onChange={(e) => setExecutionInput(e.target.value)}
@@ -396,7 +396,7 @@ export function ToolPanel({
                           </Button>
                         </form>
                       )}
-                    </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -412,7 +412,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre rounded-md bg-secondary p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
