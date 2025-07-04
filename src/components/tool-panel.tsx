@@ -261,7 +261,7 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid grid-cols-2 sm:flex sm:flex-wrap h-auto sm:h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:flex sm:flex-wrap h-auto sm:h-auto">
             <TabsTrigger value="agent" className="flex-1 sm:flex-initial">
               <MessageSquare className="mr-2 h-4 w-4"/>
               Agent
@@ -362,7 +362,7 @@ export function ToolPanel({
               ) : (
                 <div className="flex-1 flex flex-col min-h-0">
                   <ScrollArea className="flex-1 bg-muted/20 rounded-md">
-                      <pre className="p-4 font-mono text-sm whitespace-pre">
+                      <pre className="p-6 font-mono text-sm whitespace-pre">
                           {executionTranscript}
                           {isExecuting && !isWaitingForInput && (
                               <div className="flex items-center text-muted-foreground mt-2">
@@ -373,18 +373,18 @@ export function ToolPanel({
                       </pre>
                   </ScrollArea>
                   {isWaitingForInput && (
-                      <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-1 pt-1 bg-background font-mono text-sm">
+                      <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
                           <Input
                               value={executionInput}
                               onChange={(e) => setExecutionInput(e.target.value)}
-                              className="flex-1 h-8"
+                              className="flex-1 h-9"
                               placeholder="Type your input here..."
                               autoFocus
                               spellCheck="false"
                           />
-                          <Button type="submit" size="icon" className="h-8 w-8">
-                              <Send className="w-4 h-4" />
-                              <span className="sr-only">Send Input</span>
+                          <Button type="submit" size="sm" className="h-9">
+                              <Send className="w-4 h-4 mr-2" />
+                              Send
                           </Button>
                       </form>
                   )}
@@ -402,7 +402,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre-wrap p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
