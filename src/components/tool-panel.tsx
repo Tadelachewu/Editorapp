@@ -370,7 +370,7 @@ export function ToolPanel({
                   ) : (
                     <div className="flex-1 flex flex-col min-h-0">
                       <ScrollArea className="flex-1 font-mono text-sm" ref={executionOutputRef}>
-                        <pre className="whitespace-pre-wrap break-words p-4">
+                        <pre className="whitespace-pre p-4">
                           {executionTranscript}
                         </pre>
                         {isExecuting && !isWaitingForInput && (
