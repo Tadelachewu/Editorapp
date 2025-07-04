@@ -368,9 +368,9 @@ export function ToolPanel({
                       <p className="text-xs">Click the "Run" button in the editor to start.</p>
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col min-h-0">
+                    <>
                       <ScrollArea className="flex-1 font-mono text-sm" ref={executionOutputRef}>
-                        <pre className="whitespace-pre p-4">
+                        <pre className="p-4 whitespace-pre">
                           {executionTranscript}
                         </pre>
                         {isExecuting && !isWaitingForInput && (
@@ -396,7 +396,7 @@ export function ToolPanel({
                           </Button>
                         </form>
                       )}
-                    </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -412,7 +412,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
