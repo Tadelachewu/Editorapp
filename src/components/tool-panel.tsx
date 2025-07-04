@@ -354,52 +354,52 @@ export function ToolPanel({
             </TabsContent>
           ) : (
             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-              <Card className="w-full flex-1 flex flex-col min-h-0">
-                <CardHeader className="py-3 px-4 border-b">
-                  <CardTitle className="flex items-center gap-2 text-base font-medium">
-                    <Terminal className="w-5 h-5" />
-                    Output
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 p-0 flex flex-col min-h-0 bg-background">
-                  {executionTranscript === '' && !isExecuting ? (
-                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
-                      <p>Output from your code will appear here.</p>
-                      <p className="text-xs">Click the "Run" button in the editor to start.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <ScrollArea className="flex-1" ref={executionOutputRef}>
-                        <pre className="p-4 font-mono text-sm whitespace-pre">
-                          {executionTranscript}
-                          {isExecuting && !isWaitingForInput && (
-                            <div className="flex items-center text-muted-foreground mt-2">
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              <span>Executing...</span>
+                <Card className="w-full flex-1 flex flex-col min-h-0">
+                    <CardHeader className="py-3 px-4 border-b flex-shrink-0">
+                        <CardTitle className="flex items-center gap-2 text-base font-medium">
+                            <Terminal className="w-5 h-5" />
+                            Output
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-0 flex flex-col min-h-0 bg-background">
+                        {executionTranscript === '' && !isExecuting ? (
+                            <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                                <p>Output from your code will appear here.</p>
+                                <p className="text-xs">Click the "Run" button in the editor to start.</p>
                             </div>
-                          )}
-                        </pre>
-                      </ScrollArea>
-                      {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t p-2 bg-background font-mono text-sm">
-                          <Input
-                            value={executionInput}
-                            onChange={(e) => setExecutionInput(e.target.value)}
-                            className="flex-1 h-9"
-                            placeholder="Type your input here..."
-                            autoFocus
-                            spellCheck="false"
-                          />
-                          <Button type="submit" size="icon" className="h-9 w-9">
-                            <Send className="w-4 h-4" />
-                            <span className="sr-only">Send Input</span>
-                          </Button>
-                        </form>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                        ) : (
+                            <>
+                                <ScrollArea className="flex-1" ref={executionOutputRef}>
+                                    <pre className="p-4 font-mono text-sm whitespace-pre">
+                                        {executionTranscript}
+                                        {isExecuting && !isWaitingForInput && (
+                                            <div className="flex items-center text-muted-foreground mt-2">
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                <span>Executing...</span>
+                                            </div>
+                                        )}
+                                    </pre>
+                                </ScrollArea>
+                                {isWaitingForInput && (
+                                    <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t p-2 bg-background font-mono text-sm">
+                                        <Input
+                                            value={executionInput}
+                                            onChange={(e) => setExecutionInput(e.target.value)}
+                                            className="flex-1 h-9"
+                                            placeholder="Type your input here..."
+                                            autoFocus
+                                            spellCheck="false"
+                                        />
+                                        <Button type="submit" size="icon" className="h-9 w-9">
+                                            <Send className="w-4 h-4" />
+                                            <span className="sr-only">Send Input</span>
+                                        </Button>
+                                    </form>
+                                )}
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
             </TabsContent>
           )}
 
