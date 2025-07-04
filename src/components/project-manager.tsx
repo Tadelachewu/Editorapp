@@ -123,7 +123,7 @@ const ProjectTree = ({
                                 </Button>
                             </div>
                         </div>
-                        <CollapsibleContent className="pl-6">
+                        <CollapsibleContent className="pl-4 sm:pl-6">
                             <ProjectTree
                                 nodes={node.children}
                                 activeFileId={activeFileId}
@@ -174,7 +174,7 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
                 height={32}
                 className="rounded-full"
               />
-              <span className="text-lg font-semibold">File Manager</span>
+              <span className="text-base sm:text-lg font-semibold">File Manager</span>
             </div>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={() => onNewItem(null)} className="w-7 h-7" title="New Item">

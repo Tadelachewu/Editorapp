@@ -251,7 +251,7 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="agent">
               <MessageSquare className="w-4 h-4 sm:mr-2"/>
               <span className="hidden sm:inline">Agent</span>
@@ -291,7 +291,7 @@ export function ToolPanel({
                       <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'justify-end' : '')}>
                         {message.role === 'assistant' && <div className="p-2 rounded-full bg-primary text-primary-foreground flex-shrink-0"><Bot className="w-4 h-4" /></div>}
                         <div className={cn(
-                          "rounded-lg p-3 text-sm max-w-sm md:max-w-md lg:max-w-lg",
+                          "rounded-lg p-3 text-sm max-w-[85%]",
                           message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                         )}>
                           <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
