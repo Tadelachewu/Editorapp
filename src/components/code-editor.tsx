@@ -19,7 +19,6 @@ interface CodeEditorProps {
   onRun: () => void;
   isRunning: boolean;
   useOllama: boolean;
-  isVisible: boolean;
 }
 
 const languageMap: Record<Language, string> = {
@@ -33,22 +32,13 @@ const languageMap: Record<Language, string> = {
   'Web': 'html',
 };
 
-export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning, useOllama, isVisible }: CodeEditorProps) {
+export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning, useOllama }: CodeEditorProps) {
   const monacoInstance = useMonaco();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
   };
-  
-  useEffect(() => {
-    if (isVisible && editorRef.current) {
-      // Use a timeout to ensure the container has finished its resize animation/transition
-      setTimeout(() => {
-        editorRef.current?.layout();
-      }, 0);
-    }
-  }, [isVisible]);
 
   useEffect(() => {
     if (!monacoInstance || !file || file.itemType !== 'file' || !file.language || !file.fileType) return;

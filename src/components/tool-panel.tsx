@@ -32,6 +32,11 @@ interface ToolPanelProps {
   executionTranscript: string;
   onExecuteInput: (input: string) => void;
   useOllama: boolean;
+  // Lifted state
+  chatMessages: { role: 'user' | 'assistant'; content: string }[];
+  setChatMessages: React.Dispatch<React.SetStateAction<{ role: 'user' | 'assistant'; content: string }[]>>;
+  isChatting: boolean;
+  setIsChatting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function ToolPanel({
@@ -48,14 +53,16 @@ export function ToolPanel({
   executionTranscript,
   onExecuteInput,
   useOllama,
+  chatMessages,
+  setChatMessages,
+  isChatting,
+  setIsChatting,
 }: ToolPanelProps) {
   const [improvementResult, setImprovementResult] = useState<{ suggestions: string; improvedCode: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [chatInput, setChatInput] = useState('');
-  const [isChatting, setIsChatting] = useState(false);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const executionOutputRef = useRef<HTMLDivElement>(null);
@@ -132,12 +139,6 @@ export function ToolPanel({
       }
     };
   }, [activeTab, file, content, allItems, isWebApp, toast]);
-
-
-  useEffect(() => {
-    // Reset chat when file changes
-    setChatMessages([]);
-  }, [file?.id]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -245,33 +246,33 @@ export function ToolPanel({
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col min-h-0">
       <CardHeader>
         <CardTitle>Tools</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-            <TabsTrigger value="agent">
+            <TabsTrigger value="agent" className="sm:w-auto">
               <MessageSquare className="w-4 h-4 sm:mr-2"/>
               <span className="hidden sm:inline">Agent</span>
             </TabsTrigger>
             {isWebApp ? (
-              <TabsTrigger value="preview">
+              <TabsTrigger value="preview" className="sm:w-auto">
                 <Eye className="w-4 h-4 sm:mr-2"/>
                 <span className="hidden sm:inline">Preview</span>
               </TabsTrigger>
             ) : (
-              <TabsTrigger value="output">
+              <TabsTrigger value="output" className="sm:w-auto">
                 <Terminal className="w-4 h-4 sm:mr-2"/>
                 <span className="hidden sm:inline">Output</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="improvements">
+            <TabsTrigger value="improvements" className="sm:w-auto">
               <Bot className="w-4 h-4 sm:mr-2"/>
               <span className="hidden sm:inline">Improvements</span>
             </TabsTrigger>
-            <TabsTrigger value="history">
+            <TabsTrigger value="history" className="sm:w-auto">
               <History className="w-4 h-4 sm:mr-2"/>
               <span className="hidden sm:inline">History</span>
             </TabsTrigger>
@@ -448,5 +449,3 @@ export function ToolPanel({
     </Card>
   );
 }
-
-    
