@@ -412,7 +412,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre rounded-md bg-secondary p-4 font-code text-sm text-left overflow-x-auto">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre rounded-md bg-secondary p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
@@ -432,26 +432,28 @@ export function ToolPanel({
               </div>
             )}
           </TabsContent>
-          <TabsContent value="history" className="flex-1 mt-4 overflow-y-auto">
-            {history.length > 0 ? (
-              <ul className="space-y-2">
-                {history.map(v => (
-                  <li key={v.vid} className="flex items-center justify-between rounded-md border p-2">
-                    <div>
-                      <p className="text-sm">Saved {formatDistanceToNow(v.timestamp, { addSuffix: true })}</p>
-                      <p className="text-xs text-muted-foreground">{v.timestamp.toLocaleString()}</p>
+          <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-2">
+            <ScrollArea className="flex-1 -mx-6 px-6 py-4">
+                {history.length > 0 ? (
+                  <ul className="space-y-2">
+                    {history.map(v => (
+                      <li key={v.vid} className="flex items-center justify-between rounded-md border p-2">
+                        <div>
+                          <p className="text-sm">Saved {formatDistanceToNow(v.timestamp, { addSuffix: true })}</p>
+                          <p className="text-xs text-muted-foreground">{v.timestamp.toLocaleString()}</p>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => v.vid && onRevert(v.vid)}>Revert</Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                    <div className="text-center text-sm text-muted-foreground p-4 flex flex-col items-center justify-center h-full">
+                        <History className="w-8 h-8 mx-auto mb-2" />
+                        <p className="font-semibold">Version History</p>
+                        <p>No version history for this file yet. Save the file to create a version.</p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => v.vid && onRevert(v.vid)}>Revert</Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-                <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
-                    <History className="w-8 h-8 mx-auto mb-2" />
-                    <p className="font-semibold">Version History</p>
-                    <p>No version history for this file yet. Save the file to create a version.</p>
-                </div>
-            )}
+                )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </CardContent>
