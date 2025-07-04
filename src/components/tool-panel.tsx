@@ -237,7 +237,7 @@ export function ToolPanel({
 
   if (!file) {
     return (
-        <Card className="h-full flex items-center justify-center">
+        <Card className="h-full w-full flex items-center justify-center">
             <CardContent>
                 <p>Select a file to see available tools.</p>
             </CardContent>
@@ -246,7 +246,7 @@ export function ToolPanel({
   }
 
   return (
-    <Card className="h-full flex flex-col min-h-0">
+    <Card className="h-full w-full flex flex-col min-h-0">
       <CardHeader>
         <CardTitle>Tools</CardTitle>
       </CardHeader>
