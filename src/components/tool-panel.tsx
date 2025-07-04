@@ -361,27 +361,27 @@ export function ToolPanel({
                     Output
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 p-0 flex flex-col min-h-0 bg-secondary">
+                <CardContent className="flex-1 p-0 flex flex-col min-h-0 bg-background">
                   {executionTranscript === '' && !isExecuting ? (
-                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center bg-background">
+                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
                       <p>Output from your code will appear here.</p>
                       <p className="text-xs">Click the "Run" button in the editor to start.</p>
                     </div>
                   ) : (
                     <>
-                      <ScrollArea className="flex-1 font-mono text-sm" ref={executionOutputRef}>
-                        <pre className="p-4 whitespace-pre">
+                      <ScrollArea className="flex-1" ref={executionOutputRef}>
+                        <pre className="p-4 font-mono text-sm whitespace-pre">
                           {executionTranscript}
+                          {isExecuting && !isWaitingForInput && (
+                            <div className="flex items-center text-muted-foreground mt-2">
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              <span>Executing...</span>
+                            </div>
+                          )}
                         </pre>
-                        {isExecuting && !isWaitingForInput && (
-                          <div className="flex items-center text-muted-foreground px-4 pb-2">
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            <span>Executing...</span>
-                          </div>
-                        )}
                       </ScrollArea>
                       {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background font-mono text-sm">
+                        <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t p-2 bg-background font-mono text-sm">
                           <Input
                             value={executionInput}
                             onChange={(e) => setExecutionInput(e.target.value)}
