@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2 } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ import type { ProjectItem, DbVersion } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/db';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 interface ToolPanelProps {
@@ -37,6 +38,7 @@ interface ToolPanelProps {
   setChatMessages: React.Dispatch<React.SetStateAction<{ role: 'user' | 'assistant'; content: string }[]>>;
   isChatting: boolean;
   setIsChatting: React.Dispatch<React.SetStateAction<boolean>>;
+  onClose: () => void;
 }
 
 export function ToolPanel({
@@ -57,6 +59,7 @@ export function ToolPanel({
   setChatMessages,
   isChatting,
   setIsChatting,
+  onClose,
 }: ToolPanelProps) {
   const [improvementResult, setImprovementResult] = useState<{ suggestions: string; improvedCode: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,6 +73,7 @@ export function ToolPanel({
 
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const isWebApp = file?.language === 'Web';
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     let url: string | undefined;
@@ -247,12 +251,17 @@ export function ToolPanel({
 
   return (
     <Card className="h-full w-full flex flex-col min-h-0">
-      <CardHeader>
+      <CardHeader className="flex-row items-center justify-between">
         <CardTitle>Tools</CardTitle>
+        {!isMobile && (
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close panel">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="agent">
               <MessageSquare className="mr-2 h-4 w-4"/>
               Agent
