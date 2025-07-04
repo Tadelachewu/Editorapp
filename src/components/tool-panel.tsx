@@ -344,7 +344,7 @@ export function ToolPanel({
             </TabsContent>
           ) : (
             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-              <Card className="flex-1 flex flex-col">
+              <Card className="flex-1 flex flex-col min-h-0">
                 <CardHeader className="py-3 px-4 border-b">
                   <CardTitle className="flex items-center gap-2 text-base font-medium">
                     <Terminal className="w-5 h-5" />
@@ -448,3 +448,5 @@ export function ToolPanel({
     </Card>
   );
 }
+
+    
