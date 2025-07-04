@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
-import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { ProjectManager } from '@/components/project-manager';
 import { CodeEditor } from '@/components/code-editor';
 import { ToolPanel } from '@/components/tool-panel';
@@ -20,9 +20,9 @@ import { Code, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
-
-export function EditorLayout() {
+function EditorLayoutContent() {
   const { toast } = useToast();
+  const { setOpenMobile } = useSidebar();
 
   const allItems = useLiveQuery(() => db.items.orderBy('name').toArray(), []);
   
@@ -91,9 +91,10 @@ export function EditorLayout() {
       setActiveToolTab('agent');
       if (isMobile) {
         setActiveMobileView('editor');
+        setOpenMobile(false);
       }
     }
-  }, [allItems, isMobile]);
+  }, [allItems, isMobile, setOpenMobile]);
 
   const handleContentChange = useCallback((content: string) => {
     setCurrentContent(content);
@@ -338,7 +339,7 @@ export function EditorLayout() {
 
 
   return (
-    <SidebarProvider>
+    <>
        <NewFileDialog
         open={isNewFileDialogOpen}
         onOpenChange={setIsNewFileDialogOpen}
@@ -417,6 +418,15 @@ export function EditorLayout() {
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+
+export function EditorLayout() {
+  return (
+    <SidebarProvider>
+      <EditorLayoutContent />
     </SidebarProvider>
   );
 }
