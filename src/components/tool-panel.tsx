@@ -412,7 +412,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left overflow-x-auto">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
@@ -422,7 +422,7 @@ export function ToolPanel({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
                 <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="font-semibold mb-2">Code Improvements</p>
                 <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
