@@ -111,19 +111,19 @@ const ProjectTree = ({
                                     <span className="truncate">{node.name}</span>
                                 </div>
                             </CollapsibleTrigger>
-                            <div className={cn("items-center gap-1", isMobile ? 'flex' : 'hidden group-hover:flex')}>
-                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={(e) => {e.stopPropagation(); onNewItem(node.id)}}>
+                            <div className={cn("items-center gap-1 sm:gap-0", isMobile ? 'flex' : 'hidden group-hover:flex')}>
+                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => onNewItem(node.id)}>
                                     <FilePlus className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={(e) => {e.stopPropagation(); onNewItem(node.id)}}>
+                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => onNewItem(node.id)}>
                                     <FolderPlus className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={(e) => {e.stopPropagation(); setDeleteCandidate(node.id)}}>
+                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setDeleteCandidate(node.id)}>
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </div>
                         </div>
-                        <CollapsibleContent className="pl-6">
+                        <CollapsibleContent className={cn("pl-2 sm:pl-5")}>
                             <ProjectTree
                                 nodes={node.children}
                                 activeFileId={activeFileId}
@@ -136,14 +136,18 @@ const ProjectTree = ({
                         </CollapsibleContent>
                     </Collapsible>
                 ) : (
-                    <div key={node.id} className="flex items-center group pr-2 rounded-md hover:bg-accent/50"
-                         onClick={() => onFileSelect(node.id)}
-                    >
-                       <div className={cn("flex items-center gap-2 p-1.5 text-sm flex-1 cursor-pointer rounded-md overflow-hidden", activeFileId === node.id && "bg-accent")}>
+                    <div key={node.id} className="flex items-center group pr-2">
+                        <button
+                           onClick={() => onFileSelect(node.id)}
+                           className={cn(
+                               "flex items-center gap-2 p-1.5 text-sm flex-1 cursor-pointer rounded-md overflow-hidden text-left w-full hover:bg-accent/50",
+                               activeFileId === node.id && "bg-accent"
+                           )}
+                        >
                             <LanguageIcon language={node.language} />
                             <span className="truncate">{node.name}</span>
-                        </div>
-                        <Button variant="ghost" size="icon" className={cn("w-6 h-6", isMobile ? 'flex' : 'hidden group-hover:flex')} onClick={(e) => { e.stopPropagation(); setDeleteCandidate(node.id);}}>
+                        </button>
+                        <Button variant="ghost" size="icon" className={cn("w-6 h-6 ml-1", isMobile ? 'flex' : 'hidden group-hover:flex')} onClick={() => setDeleteCandidate(node.id)}>
                             <Trash2 className="w-4 h-4" />
                         </Button>
                     </div>
@@ -174,7 +178,7 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
                 height={32}
                 className="rounded-full"
               />
-              <span className="text-lg font-semibold">File Manager</span>
+              <span className="text-sm font-semibold sm:text-base">File Manager</span>
             </div>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={() => onNewItem(null)} className="w-7 h-7" title="New Item">
@@ -263,3 +267,5 @@ export function ProjectManager({ items, activeFileId, onFileSelect, onNewItem, o
     </>
   );
 }
+
+    

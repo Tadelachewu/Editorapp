@@ -1,14 +1,16 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { ProjectItem, Language } from '@/lib/types';
-import { Save, Play, Square, Eye } from 'lucide-react';
+import { Save, Play, Square, Eye, Wrench } from 'lucide-react';
 import Editor, { useMonaco } from '@monaco-editor/react';
 import { generateCodeSuggestions } from '@/ai/flows/generate-code-suggestions';
 import type * as monaco from 'monaco-editor';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CodeEditorProps {
   file: ProjectItem | undefined;
@@ -18,6 +20,8 @@ interface CodeEditorProps {
   onRun: () => void;
   isRunning: boolean;
   useOllama: boolean;
+  isToolPanelOpen: boolean;
+  onOpenToolPanel: () => void;
 }
 
 const languageMap: Record<Language, string> = {
@@ -31,8 +35,34 @@ const languageMap: Record<Language, string> = {
   'Web': 'html',
 };
 
-export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRunning, useOllama }: CodeEditorProps) {
+export function CodeEditor({ 
+  file, 
+  content, 
+  onContentChange, 
+  onSave, 
+  onRun, 
+  isRunning, 
+  useOllama,
+  isToolPanelOpen,
+  onOpenToolPanel
+}: CodeEditorProps) {
   const monacoInstance = useMonaco();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const isMobile = useIsMobile();
+
+  const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+    editorRef.current = editor;
+  };
+
+  useEffect(() => {
+    // This is to force a re-layout when the container size changes.
+    // A slight delay is sometimes needed for the DOM to update.
+    if (editorRef.current) {
+        setTimeout(() => {
+            editorRef.current?.layout();
+        }, 100);
+    }
+  }, [isToolPanelOpen]);
 
   useEffect(() => {
     if (!monacoInstance || !file || file.itemType !== 'file' || !file.language || !file.fileType) return;
@@ -75,7 +105,7 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
 
   if (!file || file.itemType !== 'file') {
     return (
-      <Card className="h-full flex items-center justify-center">
+      <Card className="h-full w-full flex items-center justify-center">
         <CardContent>
           <p>Select a file to start editing.</p>
         </CardContent>
@@ -87,9 +117,9 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
   const isWebApp = file.language === 'Web';
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex-1 w-full flex flex-col min-h-0">
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="flex-1 min-w-0 overflow-x-auto py-1">
           <CardTitle>{file.name}</CardTitle>
           <CardDescription>Language: {file.language}</CardDescription>
         </div>
@@ -112,15 +142,22 @@ export function CodeEditor({ file, content, onContentChange, onSave, onRun, isRu
                 <Save className="mr-2 h-4 w-4" />
                 Save
             </Button>
+             {!isMobile && !isToolPanelOpen && (
+              <Button onClick={onOpenToolPanel} size="sm" variant="outline" className="flex-1 sm:flex-initial" title="Open Tools">
+                <Wrench className="mr-2 h-4 w-4" />
+                Tools
+              </Button>
+            )}
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-0">
+      <CardContent className="flex-1 p-0 min-h-0">
         <Editor
           height="100%"
           language={monacoLanguage}
           value={content}
           onChange={(value) => onContentChange(value || '')}
           theme="vs-dark"
+          onMount={handleEditorMount}
           options={{
             minimap: { enabled: true },
             fontSize: 14,

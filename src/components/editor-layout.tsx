@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
-import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { ProjectManager } from '@/components/project-manager';
 import { CodeEditor } from '@/components/code-editor';
 import { ToolPanel } from '@/components/tool-panel';
@@ -20,9 +20,9 @@ import { Code, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 
-
-export function EditorLayout() {
+function EditorLayoutContent() {
   const { toast } = useToast();
+  const { setOpenMobile } = useSidebar();
 
   const allItems = useLiveQuery(() => db.items.orderBy('name').toArray(), []);
   
@@ -43,6 +43,11 @@ export function EditorLayout() {
   
   const isMobile = useIsMobile();
   const [activeMobileView, setActiveMobileView] = useState<'editor' | 'tools'>('editor');
+  const [isToolPanelOpen, setIsToolPanelOpen] = useState(true);
+
+  // State lifted from ToolPanel to preserve chat history on mobile view switch
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [isChatting, setIsChatting] = useState(false);
 
   useEffect(() => {
     if (allItems && allItems.length > 0) {
@@ -68,6 +73,15 @@ export function EditorLayout() {
           setCurrentContent('');
         }
       });
+      // Clear state when file changes
+      setChatMessages([]);
+      setIsChatting(false);
+      setExecutionTranscript('');
+      if (executionStateRef.current.isRunning) {
+        executionStateRef.current.isRunning = false;
+        setIsExecuting(false);
+        setIsWaitingForInput(false);
+      }
     } else {
       setCurrentContent('');
     }
@@ -91,9 +105,10 @@ export function EditorLayout() {
       setActiveToolTab('agent');
       if (isMobile) {
         setActiveMobileView('editor');
+        setOpenMobile(false);
       }
     }
-  }, [allItems, isMobile]);
+  }, [allItems, isMobile, setOpenMobile]);
 
   const handleContentChange = useCallback((content: string) => {
     setCurrentContent(content);
@@ -327,18 +342,8 @@ export function EditorLayout() {
     continueExecution(executionTranscript, input);
   }, [isWaitingForInput, executionTranscript, continueExecution]);
 
-  useEffect(() => {
-    if (executionStateRef.current.isRunning) {
-      executionStateRef.current.isRunning = false;
-      setIsExecuting(false);
-      setIsWaitingForInput(false);
-    }
-    setExecutionTranscript('');
-  }, [activeFileId]);
-
-
   return (
-    <SidebarProvider>
+    <>
        <NewFileDialog
         open={isNewFileDialogOpen}
         onOpenChange={setIsNewFileDialogOpen}
@@ -358,45 +363,59 @@ export function EditorLayout() {
           />
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none !shadow-none flex-1 pb-14 md:pb-0">
-          <div className="flex flex-col md:flex-row h-full w-full">
-             <div className="md:hidden absolute top-2 left-2 z-20">
+          <div className="flex flex-1 flex-col md:flex-row w-full min-h-0">
+            <div className="md:hidden absolute top-2 left-2 z-20">
               <SidebarTrigger />
             </div>
-            <div className={cn(
-              "w-full h-full flex flex-col p-1 sm:p-2 md:w-1/2",
-              isMobile ? (activeMobileView === 'editor' ? 'flex' : 'hidden') : 'flex'
-            )}>
-              <CodeEditor
-                file={activeFile}
-                content={currentContent}
-                onContentChange={handleContentChange}
-                onSave={handleSave}
-                onRun={handleRunCode}
-                isRunning={isExecuting}
-                useOllama={useOllama}
-              />
-            </div>
-            <div className={cn(
-              "w-full h-full flex flex-col border-t md:border-t-0 md:border-l border-border p-1 sm:p-2 md:w-1/2",
-              isMobile ? (activeMobileView === 'tools' ? 'flex' : 'hidden') : 'flex'
-            )}>
-              <ToolPanel
-                key={activeFileId}
-                file={activeFile}
-                content={currentContent}
-                allItems={allItems || []}
-                history={activeFileHistory || []}
-                onRevert={handleRevert}
-                activeTab={activeToolTab}
-                onTabChange={setActiveToolTab}
-                onCodeUpdate={handleCodeUpdate}
-                isExecuting={isExecuting}
-                isWaitingForInput={isWaitingForInput}
-                executionTranscript={executionTranscript}
-                onExecuteInput={handleExecuteInput}
-                useOllama={useOllama}
-              />
-            </div>
+
+            {/* Editor Panel: Render on desktop OR when active on mobile */}
+            {(!isMobile || activeMobileView === 'editor') && (
+              <div className={cn(
+                "flex-1 flex flex-col min-h-0",
+                !isMobile && isToolPanelOpen && "md:w-1/2",
+                !isMobile && !isToolPanelOpen && "md:w-full"
+              )}>
+                <CodeEditor
+                  file={activeFile}
+                  content={currentContent}
+                  onContentChange={handleContentChange}
+                  onSave={handleSave}
+                  onRun={handleRunCode}
+                  isRunning={isExecuting}
+                  useOllama={useOllama}
+                  isToolPanelOpen={isToolPanelOpen}
+                  onOpenToolPanel={() => setIsToolPanelOpen(true)}
+                />
+              </div>
+            )}
+            
+            {/* Tool Panel: Render on desktop OR when active on mobile */}
+            {((!isMobile && isToolPanelOpen) || (isMobile && activeMobileView === 'tools')) && (
+              <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0">
+                <ToolPanel
+                  key={activeFileId}
+                  file={activeFile}
+                  content={currentContent}
+                  allItems={allItems || []}
+                  history={activeFileHistory || []}
+                  onRevert={handleRevert}
+                  activeTab={activeToolTab}
+                  onTabChange={setActiveToolTab}
+                  onCodeUpdate={handleCodeUpdate}
+                  isExecuting={isExecuting}
+                  isWaitingForInput={isWaitingForInput}
+                  executionTranscript={executionTranscript}
+                  onExecuteInput={handleExecuteInput}
+                  useOllama={useOllama}
+                  // Pass down lifted state
+                  chatMessages={chatMessages}
+                  setChatMessages={setChatMessages}
+                  isChatting={isChatting}
+                  setIsChatting={setIsChatting}
+                  onClose={() => setIsToolPanelOpen(false)}
+                />
+              </div>
+            )}
           </div>
         </SidebarInset>
         {isMobile && (
@@ -420,6 +439,15 @@ export function EditorLayout() {
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+
+export function EditorLayout() {
+  return (
+    <SidebarProvider>
+      <EditorLayoutContent />
     </SidebarProvider>
   );
 }

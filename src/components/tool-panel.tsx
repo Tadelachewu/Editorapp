@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2 } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ import type { ProjectItem, DbVersion } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/db';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 interface ToolPanelProps {
@@ -32,6 +33,12 @@ interface ToolPanelProps {
   executionTranscript: string;
   onExecuteInput: (input: string) => void;
   useOllama: boolean;
+  // Lifted state
+  chatMessages: { role: 'user' | 'assistant'; content: string }[];
+  setChatMessages: React.Dispatch<React.SetStateAction<{ role: 'user' | 'assistant'; content: string }[]>>;
+  isChatting: boolean;
+  setIsChatting: React.Dispatch<React.SetStateAction<boolean>>;
+  onClose: () => void;
 }
 
 export function ToolPanel({
@@ -48,14 +55,17 @@ export function ToolPanel({
   executionTranscript,
   onExecuteInput,
   useOllama,
+  chatMessages,
+  setChatMessages,
+  isChatting,
+  setIsChatting,
+  onClose,
 }: ToolPanelProps) {
   const [improvementResult, setImprovementResult] = useState<{ suggestions: string; improvedCode: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [chatInput, setChatInput] = useState('');
-  const [isChatting, setIsChatting] = useState(false);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const executionOutputRef = useRef<HTMLDivElement>(null);
@@ -63,6 +73,7 @@ export function ToolPanel({
 
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const isWebApp = file?.language === 'Web';
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     let url: string | undefined;
@@ -132,12 +143,6 @@ export function ToolPanel({
       }
     };
   }, [activeTab, file, content, allItems, isWebApp, toast]);
-
-
-  useEffect(() => {
-    // Reset chat when file changes
-    setChatMessages([]);
-  }, [file?.id]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -236,8 +241,8 @@ export function ToolPanel({
 
   if (!file) {
     return (
-        <Card className="h-full flex items-center justify-center">
-            <CardContent>
+        <Card className="h-full w-full flex items-center justify-center">
+            <CardContent className="w-full">
                 <p>Select a file to see available tools.</p>
             </CardContent>
         </Card>
@@ -245,35 +250,40 @@ export function ToolPanel({
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
+    <Card className="h-full w-full flex flex-col min-h-0">
+      <CardHeader className="flex-row items-center justify-between">
         <CardTitle>Tools</CardTitle>
+        {!isMobile && (
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close panel">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList>
-            <TabsTrigger value="agent">
-              <MessageSquare className="w-4 h-4 sm:mr-2"/>
-              <span className="hidden sm:inline">Agent</span>
+          <TabsList className="grid w-full grid-cols-2 sm:flex sm:flex-wrap h-auto sm:h-auto">
+            <TabsTrigger value="agent" className="flex-1 sm:flex-initial">
+              <MessageSquare className="mr-2 h-4 w-4"/>
+              Agent
             </TabsTrigger>
             {isWebApp ? (
-              <TabsTrigger value="preview">
-                <Eye className="w-4 h-4 sm:mr-2"/>
-                <span className="hidden sm:inline">Preview</span>
+              <TabsTrigger value="preview" className="flex-1 sm:flex-initial">
+                <Eye className="mr-2 h-4 w-4"/>
+                Preview
               </TabsTrigger>
             ) : (
-              <TabsTrigger value="output">
-                <Terminal className="w-4 h-4 sm:mr-2"/>
-                <span className="hidden sm:inline">Output</span>
+              <TabsTrigger value="output" className="flex-1 sm:flex-initial">
+                <Terminal className="mr-2 h-4 w-4"/>
+                Output
               </TabsTrigger>
             )}
-            <TabsTrigger value="improvements">
-              <Bot className="w-4 h-4 sm:mr-2"/>
-              <span className="hidden sm:inline">Improvements</span>
+            <TabsTrigger value="improvements" className="flex-1 sm:flex-initial">
+              <Bot className="mr-2 h-4 w-4"/>
+              Improvements
             </TabsTrigger>
-            <TabsTrigger value="history">
-              <History className="w-4 h-4 sm:mr-2"/>
-              <span className="hidden sm:inline">History</span>
+            <TabsTrigger value="history" className="flex-1 sm:flex-initial">
+              <History className="mr-2 h-4 w-4"/>
+              History
             </TabsTrigger>
           </TabsList>
           
@@ -291,7 +301,7 @@ export function ToolPanel({
                       <div key={index} className={cn("flex items-start gap-3", message.role === 'user' ? 'justify-end' : '')}>
                         {message.role === 'assistant' && <div className="p-2 rounded-full bg-primary text-primary-foreground flex-shrink-0"><Bot className="w-4 h-4" /></div>}
                         <div className={cn(
-                          "rounded-lg p-3 text-sm max-w-sm md:max-w-md lg:max-w-lg",
+                          "rounded-lg p-3 text-sm max-w-[85%]",
                           message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                         )}>
                           <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
@@ -344,52 +354,42 @@ export function ToolPanel({
             </TabsContent>
           ) : (
             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-              <Card className="flex-1 flex flex-col">
-                <CardHeader className="py-3 px-4 border-b">
-                  <CardTitle className="flex items-center gap-2 text-base font-medium">
-                    <Terminal className="w-5 h-5" />
-                    Output
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 p-0 flex flex-col min-h-0">
-                  {executionTranscript === '' && !isExecuting ? (
-                    <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+              {executionTranscript === '' && !isExecuting ? (
+                  <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
                       <p>Output from your code will appear here.</p>
                       <p className="text-xs">Click the "Run" button in the editor to start.</p>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col min-h-0 font-mono text-sm bg-secondary">
-                      <ScrollArea className="flex-1" ref={executionOutputRef}>
-                        <pre className="whitespace-pre-wrap break-words p-4">
+                  </div>
+              ) : (
+                <div className="flex-1 flex flex-col min-h-0">
+                  <ScrollArea className="flex-1 bg-muted/20 rounded-md">
+                      <pre className="p-6 font-mono text-sm whitespace-pre">
                           {executionTranscript}
-                        </pre>
-                        {isExecuting && !isWaitingForInput && (
-                          <div className="flex items-center text-muted-foreground px-4 pb-2">
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            <span>Executing...</span>
-                          </div>
-                        )}
-                      </ScrollArea>
-                      {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background">
+                          {isExecuting && !isWaitingForInput && (
+                              <div className="flex items-center text-muted-foreground mt-2">
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  <span>Executing...</span>
+                              </div>
+                          )}
+                      </pre>
+                  </ScrollArea>
+                  {isWaitingForInput && (
+                      <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
                           <Input
-                            value={executionInput}
-                            onChange={(e) => setExecutionInput(e.target.value)}
-                            className="flex-1 h-9"
-                            placeholder="Type your input here..."
-                            autoFocus
-                            spellCheck="false"
+                              value={executionInput}
+                              onChange={(e) => setExecutionInput(e.target.value)}
+                              className="flex-1 h-9"
+                              placeholder="Type your input here..."
+                              autoFocus
+                              spellCheck="false"
                           />
-                          <Button type="submit" size="icon" className="h-9 w-9">
-                            <Send className="w-4 h-4" />
-                            <span className="sr-only">Send Input</span>
+                          <Button type="submit" size="sm" className="h-9">
+                              <Send className="w-4 h-4 mr-2" />
+                              Send
                           </Button>
-                        </form>
-                      )}
-                    </div>
+                      </form>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              )}
             </TabsContent>
           )}
 
@@ -402,7 +402,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre-wrap p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
@@ -412,7 +412,7 @@ export function ToolPanel({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
                 <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="font-semibold mb-2">Code Improvements</p>
                 <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
@@ -422,26 +422,28 @@ export function ToolPanel({
               </div>
             )}
           </TabsContent>
-          <TabsContent value="history" className="flex-1 mt-4 overflow-y-auto">
-            {history.length > 0 ? (
-              <ul className="space-y-2">
-                {history.map(v => (
-                  <li key={v.vid} className="flex items-center justify-between rounded-md border p-2">
-                    <div>
-                      <p className="text-sm">Saved {formatDistanceToNow(v.timestamp, { addSuffix: true })}</p>
-                      <p className="text-xs text-muted-foreground">{v.timestamp.toLocaleString()}</p>
+          <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-2">
+            <ScrollArea className="flex-1 -mx-6 px-6 py-4">
+                {history.length > 0 ? (
+                  <ul className="space-y-2">
+                    {history.map(v => (
+                      <li key={v.vid} className="flex items-center justify-between rounded-md border p-2">
+                        <div>
+                          <p className="text-sm">Saved {formatDistanceToNow(v.timestamp, { addSuffix: true })}</p>
+                          <p className="text-xs text-muted-foreground">{v.timestamp.toLocaleString()}</p>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => v.vid && onRevert(v.vid)}>Revert</Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                    <div className="text-center text-sm text-muted-foreground p-4 flex flex-col items-center justify-center h-full">
+                        <History className="w-8 h-8 mx-auto mb-2" />
+                        <p className="font-semibold">Version History</p>
+                        <p>No version history for this file yet. Save the file to create a version.</p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => v.vid && onRevert(v.vid)}>Revert</Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-                <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
-                    <History className="w-8 h-8 mx-auto mb-2" />
-                    <p className="font-semibold">Version History</p>
-                    <p>No version history for this file yet. Save the file to create a version.</p>
-                </div>
-            )}
+                )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </CardContent>
