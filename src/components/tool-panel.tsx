@@ -354,7 +354,7 @@ export function ToolPanel({
             </TabsContent>
           ) : (
             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-              <Card className="flex-1 flex flex-col min-h-0">
+              <Card className="w-full flex-1 flex flex-col min-h-0">
                 <CardHeader className="py-3 px-4 border-b">
                   <CardTitle className="flex items-center gap-2 text-base font-medium">
                     <Terminal className="w-5 h-5" />
@@ -368,7 +368,7 @@ export function ToolPanel({
                       <p className="text-xs">Click the "Run" button in the editor to start.</p>
                     </div>
                   ) : (
-                    <>
+                    <div className="flex-1 flex flex-col min-h-0">
                       <ScrollArea className="flex-1 font-mono text-sm" ref={executionOutputRef}>
                         <pre className="whitespace-pre-wrap break-words p-4">
                           {executionTranscript}
@@ -381,7 +381,7 @@ export function ToolPanel({
                         )}
                       </ScrollArea>
                       {isWaitingForInput && (
-                        <form onSubmit={handleExecutionInputSubmit} className="flex shrink-0 items-center gap-2 border-t p-2 bg-background font-mono text-sm">
+                        <form onSubmit={handleExecutionInputSubmit} className="flex items-center gap-2 border-t p-2 bg-background font-mono text-sm">
                           <Input
                             value={executionInput}
                             onChange={(e) => setExecutionInput(e.target.value)}
@@ -396,7 +396,7 @@ export function ToolPanel({
                           </Button>
                         </form>
                       )}
-                    </>
+                    </div>
                   )}
                 </CardContent>
               </Card>
