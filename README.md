@@ -42,3 +42,25 @@ To run models locally with Ollama (when the "Use Ollama" toggle is on):
     ```bash
     ollama pull llama3
     ```
+
+#### Running Ollama on Termux (Android / ARM64 Linux)
+
+For users on Android with Termux or another ARM64 Linux environment, you can use the following commands to install and run Ollama:
+
+```bash
+# 1. Update your packages
+pkg update && pkg upgrade
+
+# 2. Install dependencies
+pkg install curl git python
+
+# 3. Download and prepare Ollama
+curl -L https://ollama.ai/download/ollama-linux-arm64 -o ollama
+chmod +x ollama
+
+# 4. Run the Ollama server in the background
+./ollama serve &
+
+# 5. Pull your desired model
+ollama pull llama3
+```
