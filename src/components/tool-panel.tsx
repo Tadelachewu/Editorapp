@@ -261,7 +261,7 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="flex-wrap h-auto">
+          <TabsList className="grid grid-cols-2 sm:flex sm:flex-wrap h-auto sm:h-auto">
             <TabsTrigger value="agent">
               <MessageSquare className="mr-2 h-4 w-4"/>
               Agent
@@ -412,7 +412,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre-wrap rounded-md bg-secondary p-4 font-code text-sm text-left overflow-x-auto">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre rounded-md bg-secondary p-4 font-code text-sm text-left overflow-x-auto">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
