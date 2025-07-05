@@ -360,8 +360,8 @@ export function ToolPanel({
                   <p className="text-xs">Click the "Run" button in the editor to start.</p>
                 </div>
               ) : (
-                <div className='flex-1 flex flex-col min-h-0'>
-                  <ScrollArea className="flex-1 bg-muted/20 rounded-md p-2">
+                <>
+                  <ScrollArea className="flex-1 bg-muted/20 rounded-md p-4">
                     <pre className="font-mono text-sm whitespace-pre">
                       {executionTranscript}
                       {isExecuting && !isWaitingForInput && (
@@ -373,7 +373,7 @@ export function ToolPanel({
                     </pre>
                   </ScrollArea>
                   {isWaitingForInput && (
-                    <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-1 pt-1 bg-background font-mono text-sm">
+                    <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-1 pt-2 bg-background font-mono text-sm">
                       <Input
                         value={executionInput}
                         onChange={(e) => setExecutionInput(e.target.value)}
@@ -388,7 +388,7 @@ export function ToolPanel({
                       </Button>
                     </form>
                   )}
-                </div>
+                </>
               )}
             </TabsContent>
           )}
@@ -400,17 +400,17 @@ export function ToolPanel({
                 <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
               </div>
             ) : improvementResult?.suggestions ? (
-              <div className="flex-1 flex flex-col min-h-0">
+              <>
                 <ScrollArea className="flex-1 -mx-6 px-6">
                     <pre className="whitespace-pre p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
-                <div className="pt-2 border-t mt-2">
+                <div className="pt-2 border-t mt-2 flex-shrink-0">
                   <Button onClick={handleApplyImprovements} className="w-full">
                     <Wand2 className="mr-2 h-4 w-4" />
                     Apply Improvements
                   </Button>
                 </div>
-              </div>
+              </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
                 <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
