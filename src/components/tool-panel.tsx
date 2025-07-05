@@ -130,7 +130,7 @@ export function ToolPanel({
           if (e instanceof Error) {
               errorDescription = e.message;
           }
-          toast({ variant: 'destructive', title: 'Preview Error', description: 'Could not generate the web preview.' });
+          toast({ variant: 'destructive', title: 'Preview Error', description: errorDescription });
           const errorBlob = new Blob([`<h1>Preview Error</h1><p>${errorDescription}</p>`], { type: 'text/html' });
           url = URL.createObjectURL(errorBlob);
           setPreviewUrl(url);
@@ -169,7 +169,7 @@ export function ToolPanel({
     setImprovementResult(null);
     try {
       const result = await generateCodeImprovements({ code: content, language: file.language }, { useOllama });
-      if (result.improvedCode || result.suggestions) {
+      if (result) {
         setImprovementResult(result);
       } else {
         throw new Error("The AI model returned an empty response.");
@@ -369,35 +369,37 @@ export function ToolPanel({
              <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md p-3"
+                  className="flex-1 bg-muted/20 rounded-md"
                 >
-                  <pre className="font-mono text-sm whitespace-pre-wrap">
-                    {executionTranscript}
-                  </pre>
-                  {isWaitingForInput && (
-                    <form
-                      onSubmit={handleExecutionInputSubmit}
-                      className="flex items-center gap-2 pt-2 mt-2"
-                    >
-                      <Input
-                        value={executionInput}
-                        onChange={(e) => setExecutionInput(e.target.value)}
-                        className="flex-1 h-8 text-xs font-mono"
-                        placeholder="Type your input here..."
-                        autoFocus
-                        spellCheck="false"
-                      />
-                      <Button type="submit" size="sm" className="h-8">
-                        Send
-                      </Button>
-                    </form>
-                  )}
-                   {isExecuting && !isWaitingForInput && (
-                     <div className="flex items-center text-muted-foreground mt-2">
-                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                         <span>Executing...</span>
-                     </div>
-                   )}
+                  <div className="p-2">
+                    <pre className="font-mono text-sm whitespace-pre-wrap">
+                      {executionTranscript}
+                    </pre>
+                    {isWaitingForInput && (
+                      <form
+                        onSubmit={handleExecutionInputSubmit}
+                        className="flex items-center gap-2 pt-2 mt-2 border-t"
+                      >
+                        <Input
+                          value={executionInput}
+                          onChange={(e) => setExecutionInput(e.target.value)}
+                          className="flex-1 h-8 text-xs font-mono"
+                          placeholder="Type your input here..."
+                          autoFocus
+                          spellCheck="false"
+                        />
+                        <Button type="submit" size="sm" className="h-8">
+                          Send
+                        </Button>
+                      </form>
+                    )}
+                    {isExecuting && !isWaitingForInput && (
+                      <div className="flex items-center text-muted-foreground mt-2">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Executing...</span>
+                      </div>
+                    )}
+                  </div>
                 </ScrollArea>
             </TabsContent>
           )}
@@ -410,8 +412,8 @@ export function ToolPanel({
               </div>
             ) : improvementResult ? (
               <div className='flex-1 flex flex-col min-h-0'>
-                <ScrollArea className="flex-1 bg-muted/20 rounded-md p-2">
-                    <pre className="font-mono text-sm whitespace-pre-wrap p-2">{improvementResult.suggestions}</pre>
+                <ScrollArea className="flex-1 bg-muted/20 rounded-md">
+                    <pre className="font-mono text-sm whitespace-pre-wrap p-4">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-auto">
                   <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
@@ -459,5 +461,3 @@ export function ToolPanel({
     </Card>
   );
 }
-
-    
