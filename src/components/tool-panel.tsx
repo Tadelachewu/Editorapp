@@ -127,7 +127,8 @@ export function ToolPanel({
       } catch(e) {
           console.error("Error generating web preview:", e);
           toast({ variant: 'destructive', title: 'Preview Error', description: 'Could not generate the web preview.' });
-          const errorBlob = new Blob([`<h1>Preview Error</h1><p>${e}</p>`], { type: 'text/html' });
+          const description = e instanceof Error ? e.message : String(e);
+          const errorBlob = new Blob([`<h1>Preview Error</h1><p>${description}</p>`], { type: 'text/html' });
           url = URL.createObjectURL(errorBlob);
           setPreviewUrl(url);
       }
@@ -165,7 +166,11 @@ export function ToolPanel({
     setImprovementResult(null);
     try {
       const result = await generateCodeImprovements({ code: content, language: file.language }, { useOllama });
-      setImprovementResult(result);
+      if (result.improvedCode || result.suggestions) {
+        setImprovementResult(result);
+      } else {
+        throw new Error("The AI model returned an empty response.");
+      }
     } catch (error) {
       console.error(error);
       const description = error instanceof Error ? error.message : "Failed to generate improvements.";
@@ -250,7 +255,7 @@ export function ToolPanel({
 
   return (
     <Card className="h-full w-full flex flex-col min-h-0">
-      <CardHeader className="flex-row items-center justify-between p-2 border-b">
+      <CardHeader className="flex-row items-center justify-between p-2 border-b h-12">
         <CardTitle className="text-base">Tools</CardTitle>
         {!isMobile && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close panel">
@@ -258,9 +263,9 @@ export function ToolPanel({
           </Button>
         )}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
+      <CardContent className="flex-1 flex flex-col p-2 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="w-full justify-start flex-wrap h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-start h-auto">
             <TabsTrigger value="agent">
               <MessageSquare className="mr-2 h-4 w-4"/>
               Agent
@@ -287,7 +292,7 @@ export function ToolPanel({
           </TabsList>
           
           <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
-            <ScrollArea className="flex-1 -mx-6 px-6" ref={scrollAreaRef}>
+            <ScrollArea className="flex-1 -mx-2 px-2" ref={scrollAreaRef}>
                 <div className="space-y-4 pr-2">
                     {chatMessages.length === 0 && !isChatting && (
                          <div className="text-center text-sm text-muted-foreground p-4">
@@ -319,7 +324,7 @@ export function ToolPanel({
                     )}
                 </div>
             </ScrollArea>
-            <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2 pt-4 border-t mt-auto">
+            <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2 pt-2 border-t mt-auto">
                 <Textarea
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
@@ -353,17 +358,11 @@ export function ToolPanel({
             </TabsContent>
           ) : (
              <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-              {executionTranscript === '' && !isExecuting ? (
-                <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
-                  <p>Output from your code will appear here.</p>
-                  <p className="text-xs">Click the "Run" button in the editor to start.</p>
-                </div>
-              ) : (
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md p-4 pt-6"
+                  className="flex-1 bg-muted/20 rounded-md"
                 >
-                  <pre className="font-mono text-sm whitespace-pre h-full">
+                  <pre className="font-mono text-sm whitespace-pre p-4 pt-6 h-full">
                     {executionTranscript}
                     {isWaitingForInput && (
                       <form
@@ -385,13 +384,12 @@ export function ToolPanel({
                     )}
                   </pre>
                    {isExecuting && !isWaitingForInput && (
-                     <div className="flex items-center text-muted-foreground pt-2">
+                     <div className="absolute bottom-4 left-4 flex items-center text-muted-foreground">
                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                          <span>Executing...</span>
                      </div>
                    )}
                 </ScrollArea>
-              )}
             </TabsContent>
           )}
 
@@ -403,10 +401,10 @@ export function ToolPanel({
               </div>
             ) : improvementResult ? (
               <div className='flex-1 flex flex-col min-h-0'>
-                <ScrollArea className="flex-1 bg-muted/20 rounded-md p-4 min-h-0">
-                    <pre className="font-mono text-sm whitespace-pre">{improvementResult.suggestions}</pre>
+                <ScrollArea className="flex-1 bg-muted/20 rounded-md p-2">
+                    <pre className="font-mono text-sm whitespace-pre p-2">{improvementResult.suggestions}</pre>
                 </ScrollArea>
-                <div className="pt-4 border-t mt-auto">
+                <div className="pt-2 border-t mt-auto">
                   <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Apply Improvements
@@ -425,7 +423,7 @@ export function ToolPanel({
             )}
           </TabsContent>
           <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-2">
-            <ScrollArea className="flex-1 -mx-6 px-6">
+            <ScrollArea className="flex-1 -mx-2 px-2">
                 {history.length > 0 ? (
                   <ul className="space-y-2 pr-2">
                     {history.map(v => (
@@ -452,3 +450,5 @@ export function ToolPanel({
     </Card>
   );
 }
+
+    
