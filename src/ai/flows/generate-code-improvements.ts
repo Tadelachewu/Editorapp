@@ -52,7 +52,10 @@ Now, generate the \`improvedCode\` and the \`suggestions\` in the specified JSON
         },
         async input => {
         const {output} = await prompt(input);
-        return output!;
+        if (!output) {
+            throw new Error('The AI model failed to return a valid response. Please try again.');
+        }
+        return output;
         }
     );
 };
