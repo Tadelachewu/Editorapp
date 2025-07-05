@@ -54,22 +54,18 @@ export function CodeEditor({
 
   const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
-    // This is a crucial fix for mobile. When the editor is mounted
-    // (e.g., switching from Tools to Editor view), we must force a
-    // re-layout after a brief delay to ensure it fills the screen.
-    setTimeout(() => editor.layout(), 100);
   };
 
   useEffect(() => {
-    // This is to force a re-layout when the container size changes,
-    // especially on mobile when switching views.
-    // A slight delay is sometimes needed for the DOM to update.
-    if (editorRef.current && isVisible) {
-        setTimeout(() => {
-            editorRef.current?.layout();
-        }, 100);
+    // When the editor is visible (especially on mobile after switching views),
+    // we need to explicitly tell Monaco to recalculate its layout.
+    // A timeout is used to ensure the container div has resized first.
+    if (isVisible && editorRef.current) {
+      setTimeout(() => {
+        editorRef.current?.layout();
+      }, 50);
     }
-  }, [isToolPanelOpen, isVisible]);
+  }, [isVisible]);
 
   useEffect(() => {
     if (!monacoInstance || !file || file.itemType !== 'file' || !file.language || !file.fileType) return;
