@@ -261,27 +261,27 @@ export function ToolPanel({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col pt-0 min-h-0">
         <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-2 sm:flex sm:flex-wrap h-auto sm:h-auto">
-            <TabsTrigger value="agent" className="flex-1 sm:flex-initial">
+          <TabsList className="w-full">
+            <TabsTrigger value="agent">
               <MessageSquare className="mr-2 h-4 w-4"/>
               Agent
             </TabsTrigger>
             {isWebApp ? (
-              <TabsTrigger value="preview" className="flex-1 sm:flex-initial">
+              <TabsTrigger value="preview">
                 <Eye className="mr-2 h-4 w-4"/>
                 Preview
               </TabsTrigger>
             ) : (
-              <TabsTrigger value="output" className="flex-1 sm:flex-initial">
+              <TabsTrigger value="output">
                 <Terminal className="mr-2 h-4 w-4"/>
                 Output
               </TabsTrigger>
             )}
-            <TabsTrigger value="improvements" className="flex-1 sm:flex-initial">
+            <TabsTrigger value="improvements">
               <Bot className="mr-2 h-4 w-4"/>
               Improvements
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex-1 sm:flex-initial">
+            <TabsTrigger value="history">
               <History className="mr-2 h-4 w-4"/>
               History
             </TabsTrigger>
@@ -354,42 +354,44 @@ export function ToolPanel({
             </TabsContent>
           ) : (
             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
-              {executionTranscript === '' && !isExecuting ? (
-                  <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
-                      <p>Output from your code will appear here.</p>
-                      <p className="text-xs">Click the "Run" button in the editor to start.</p>
-                  </div>
-              ) : (
-                <div className="flex-1 flex flex-col min-h-0">
-                  <ScrollArea className="flex-1 bg-muted/20 rounded-md">
-                      <pre className="p-6 font-mono text-sm whitespace-pre">
-                          {executionTranscript}
-                          {isExecuting && !isWaitingForInput && (
-                              <div className="flex items-center text-muted-foreground mt-2">
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  <span>Executing...</span>
-                              </div>
-                          )}
-                      </pre>
-                  </ScrollArea>
-                  {isWaitingForInput && (
-                      <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
-                          <Input
-                              value={executionInput}
-                              onChange={(e) => setExecutionInput(e.target.value)}
-                              className="flex-1 h-9"
-                              placeholder="Type your input here..."
-                              autoFocus
-                              spellCheck="false"
-                          />
-                          <Button type="submit" size="sm" className="h-9">
-                              <Send className="w-4 h-4 mr-2" />
-                              Send
-                          </Button>
-                      </form>
+              <div className="flex-1 flex flex-col min-h-0">
+                  {executionTranscript === '' && !isExecuting ? (
+                      <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
+                          <p>Output from your code will appear here.</p>
+                          <p className="text-xs">Click the "Run" button in the editor to start.</p>
+                      </div>
+                  ) : (
+                    <div className='flex-1 flex flex-col min-h-0'>
+                        <ScrollArea className="flex-1 bg-muted/20 rounded-md">
+                            <pre className="p-4 font-mono text-sm whitespace-pre">
+                                {executionTranscript}
+                                {isExecuting && !isWaitingForInput && (
+                                    <div className="flex items-center text-muted-foreground mt-2">
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <span>Executing...</span>
+                                    </div>
+                                )}
+                            </pre>
+                        </ScrollArea>
+                        {isWaitingForInput && (
+                            <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
+                                <Input
+                                    value={executionInput}
+                                    onChange={(e) => setExecutionInput(e.target.value)}
+                                    className="flex-1 h-9 text-xs"
+                                    placeholder="Type your input here..."
+                                    autoFocus
+                                    spellCheck="false"
+                                />
+                                <Button type="submit" size="sm" className="h-9">
+                                    <Send className="w-4 h-4 mr-2" />
+                                    Send
+                                </Button>
+                            </form>
+                        )}
+                    </div>
                   )}
-                </div>
-              )}
+              </div>
             </TabsContent>
           )}
 
@@ -402,7 +404,7 @@ export function ToolPanel({
             ) : improvementResult?.suggestions ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre-wrap p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                    <pre className="whitespace-pre p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-2">
                   <Button onClick={handleApplyImprovements} className="w-full">
