@@ -43,6 +43,29 @@ To run models locally with Ollama (when the "Use Ollama" toggle is on):
     ollama pull llama3
     ```
 
+#### Accessing from Another Device
+
+By default, the application connects to Ollama at `127.0.0.1`. If you want to access your development server from another device on the same network (e.g., a mobile phone), you need to configure both this application and Ollama to use your computer's local network IP address.
+
+1.  **Find Your Local IP Address:**
+    *   On macOS/Linux, run `ifconfig | grep "inet " | grep -v 127.0.0.1`.
+    *   On Windows, run `ipconfig` and look for the "IPv4 Address".
+    *   Your local IP will likely look like `192.168.x.x` or `10.0.x.x`.
+
+2.  **Configure This App:** Create or open the `.env.local` file in the root of your project. Add the following line, replacing `YOUR_LOCAL_IP_HERE` with the address you found:
+    ```
+    OLLAMA_HOST=YOUR_LOCAL_IP_HERE
+    ```
+    Remember to restart the Next.js dev server after changing this file.
+
+3.  **Configure Ollama Server:** You must also configure the Ollama server to accept connections from other devices.
+    *   **macOS/Linux:** Set the `OLLAMA_HOST` environment variable before starting the Ollama server:
+        ```bash
+        OLLAMA_HOST=0.0.0.0 ollama serve
+        ```
+    *   **Windows:** Set a system environment variable named `OLLAMA_HOST` with the value `0.0.0.0`. Then, restart your terminal and run `ollama serve`.
+
+
 #### Running Ollama on Termux (Android / ARM64 Linux)
 
 For users on Android with Termux or another ARM64 Linux environment, you can use the following commands to install and run Ollama:
@@ -58,7 +81,8 @@ pkg install curl git python
 curl -L https://ollama.ai/download/ollama-linux-arm64 -o ollama
 chmod +x ollama
 
-# 4. Run the Ollama server in the background
+# 4. Run the Ollama server in the background, listening on all interfaces
+export OLLAMA_HOST=0.0.0.0
 ./ollama serve &
 
 # 5. Pull your desired model

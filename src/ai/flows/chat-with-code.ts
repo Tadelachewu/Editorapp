@@ -91,18 +91,20 @@ The user's latest request is:
 const googleChatFlow = createChatWithCodeFlow(googleAiInstance, 'google');
 const ollamaChatFlow = createChatWithCodeFlow(ollamaAiInstance, 'ollama');
 
+const ollamaHost = process.env.OLLAMA_HOST || '127.0.0.1';
+
 export async function chatWithCode(
   input: ChatWithCodeInput,
   options: { useOllama: boolean }
 ): Promise<ChatWithCodeOutput> {
   if (options.useOllama) {
     try {
-      const response = await fetch('http://127.0.0.1:11434');
+      const response = await fetch(`http://${ollamaHost}:11434`);
       if (!response.ok) throw new Error('Ollama server not running');
       return await ollamaChatFlow(input);
     } catch (e) {
       console.error("Ollama not available.", e);
-      throw new Error("Ollama is enabled but the server is not reachable at http://127.0.0.1:11434. Please start the Ollama server.");
+      throw new Error(`Ollama is enabled but the server is not reachable at http://${ollamaHost}:11434. Please start the Ollama server.`);
     }
   }
   return googleChatFlow(input);

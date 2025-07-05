@@ -58,6 +58,7 @@ const createCodeSuggestionsFlow = (ai: Genkit, provider: 'google' | 'ollama') =>
 const googleCodeSuggestionsFlow = createCodeSuggestionsFlow(googleAiInstance, 'google');
 const ollamaCodeSuggestionsFlow = createCodeSuggestionsFlow(ollamaAiInstance, 'ollama');
 
+const ollamaHost = process.env.OLLAMA_HOST || '127.0.0.1';
 
 export async function generateCodeSuggestions(
     input: CodeCompletionInput,
@@ -65,7 +66,7 @@ export async function generateCodeSuggestions(
 ): Promise<CodeCompletionOutput> {
     if (options.useOllama) {
         try {
-            const response = await fetch('http://127.0.0.1:11434', { signal: AbortSignal.timeout(1000) });
+            const response = await fetch(`http://${ollamaHost}:11434`, { signal: AbortSignal.timeout(1000) });
             if (!response.ok) throw new Error('Ollama server not running');
             return await ollamaCodeSuggestionsFlow(input);
         } catch (e) {

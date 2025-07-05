@@ -10,6 +10,8 @@ export const googleAiInstance = genkit({
   model: 'googleai/gemini-1.5-flash-latest',
 });
 
+const ollamaHost = process.env.OLLAMA_HOST || '127.0.0.1';
+
 /**
  * Genkit instance configured for Ollama.
  */
@@ -26,7 +28,7 @@ export const ollamaAiInstance = genkit({
           type: 'generate',
         },
       ],
-      serverAddress: 'http://127.0.0.1:11434',
+      serverAddress: `http://${ollamaHost}:11434`,
     }),
   ],
   model: 'ollama/llama3',
