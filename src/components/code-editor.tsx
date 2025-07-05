@@ -54,6 +54,10 @@ export function CodeEditor({
 
   const handleEditorMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
+    // This is a crucial fix for mobile. When the editor is mounted
+    // (e.g., switching from Tools to Editor view), we must force a
+    // re-layout after a brief delay to ensure it fills the screen.
+    setTimeout(() => editor.layout(), 100);
   };
 
   useEffect(() => {
@@ -121,7 +125,7 @@ export function CodeEditor({
 
   return (
     <Card className="flex-1 w-full flex flex-col min-h-0">
-      <CardHeader className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
+      <CardHeader className="flex flex-col gap-2 p-3 pl-12 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
         <div className="flex-1 min-w-0 overflow-x-auto py-1">
           <CardTitle className="text-lg sm:text-xl">{file.name}</CardTitle>
           <CardDescription className="text-xs sm:text-sm">Language: {file.language}</CardDescription>
