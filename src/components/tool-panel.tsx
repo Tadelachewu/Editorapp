@@ -74,6 +74,17 @@ export function ToolPanel({
   const isWebApp = file?.language === 'Web';
   const isMobile = useIsMobile();
 
+  const [chatSuggestions, setChatSuggestions] = useState<string[]>([]);
+  const allSuggestions = useMemo(() => [
+      'Explain this code to me',
+      'Refactor this code for readability',
+      'Find potential bugs in this code',
+      'Add comments to explain what this does',
+      'How can I improve the performance of this code?',
+      'What does this specific function do: ',
+      'Add proper error handling',
+    ], []);
+
   useEffect(() => {
     let url: string | undefined;
 
@@ -174,7 +185,7 @@ export function ToolPanel({
       if (result && (result.improvedCode || result.suggestions)) {
         setImprovementResult(result);
       } else {
-        setImprovementResult({ 
+         setImprovementResult({ 
           suggestions: "The AI did not suggest any changes for the current code.", 
           improvedCode: null 
         });
@@ -210,6 +221,7 @@ export function ToolPanel({
     setChatMessages(prev => [...prev, userMessage]);
     const currentInput = chatInput;
     setChatInput('');
+    setChatSuggestions([]);
     setIsChatting(true);
 
     try {
@@ -245,6 +257,25 @@ export function ToolPanel({
     } finally {
       setIsChatting(false);
     }
+  };
+  
+  const handleChatInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setChatInput(value);
+
+    if (value.trim().length > 2) {
+      const filtered = allSuggestions
+        .filter(s => s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase())
+        .slice(0, 3);
+      setChatSuggestions(filtered);
+    } else {
+      setChatSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setChatInput(suggestion);
+    setChatSuggestions([]);
   };
 
   const handleChatFormSubmit = (e: React.FormEvent) => {
@@ -341,26 +372,45 @@ export function ToolPanel({
                     )}
                 </div>
             </ScrollArea>
-            <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2 pt-2 border-t mt-auto">
-                <Textarea
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="e.g., Explain this code to me..."
-                  className="min-h-[40px] flex-1 resize-none"
-                  rows={1}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !isChatting) {
-                        e.preventDefault();
-                        handleSendChatMessage();
-                    }
-                  }}
-                  disabled={isChatting}
-                />
-                <Button type="submit" disabled={isChatting || !chatInput.trim()} size="icon">
-                  <Send className="w-4 h-4" />
-                  <span className="sr-only">Send</span>
-                </Button>
-            </form>
+            <div className="mt-auto pt-2 border-t">
+              {chatSuggestions.length > 0 && (
+                  <div className="mb-2">
+                      <div className="flex flex-wrap gap-2">
+                          {chatSuggestions.map((suggestion, index) => (
+                              <Button 
+                                  key={index} 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-auto text-left py-1 px-2"
+                                  onClick={() => handleSuggestionClick(suggestion)}
+                              >
+                                  {suggestion}
+                              </Button>
+                          ))}
+                      </div>
+                  </div>
+              )}
+              <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2">
+                  <Textarea
+                    value={chatInput}
+                    onChange={handleChatInputChange}
+                    placeholder="e.g., Explain this code to me..."
+                    className="min-h-[40px] flex-1 resize-none"
+                    rows={1}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && !isChatting) {
+                          e.preventDefault();
+                          handleSendChatMessage();
+                      }
+                    }}
+                    disabled={isChatting}
+                  />
+                  <Button type="submit" disabled={isChatting || !chatInput.trim()} size="icon">
+                    <Send className="w-4 h-4" />
+                    <span className="sr-only">Send</span>
+                  </Button>
+              </form>
+            </div>
           </TabsContent>
 
           {isWebApp ? (
