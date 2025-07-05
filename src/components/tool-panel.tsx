@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2, X } from 'lucide-react';
+import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2, X, Check } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -418,37 +418,55 @@ export function ToolPanel({
               </div>
             ) : improvementResult ? (
               <div className='flex-1 flex flex-col min-h-0 gap-4'>
-                {improvementResult.suggestions && (
+                {improvementResult.suggestions ? (
                   <div>
                     <h4 className="text-sm font-semibold mb-2 px-1">Suggestions</h4>
-                    <ScrollArea className="h-32 bg-muted/20 rounded-md p-4">
+                    <ScrollArea className="h-48 max-h-[40vh] bg-muted/20 rounded-md p-4 border">
                         <pre className="font-sans text-sm whitespace-pre-wrap">{improvementResult.suggestions}</pre>
                     </ScrollArea>
                   </div>
-                )}
-                {improvementResult.improvedCode && (
-                  <div className="flex-1 flex flex-col min-h-0">
-                    <h4 className="text-sm font-semibold mb-2 px-1">Improved Code</h4>
-                    <ScrollArea className="flex-1 bg-muted/20 rounded-md">
+                ) : null}
+                
+                <div className="flex-1 flex flex-col min-h-0">
+                  <h4 className="text-sm font-semibold mb-2 px-1">Improved Code</h4>
+                  {improvementResult.improvedCode ? (
+                    <ScrollArea className="flex-1 bg-muted/20 rounded-md border">
                         <pre className="font-mono text-sm whitespace-pre-wrap p-4">{improvementResult.improvedCode}</pre>
                     </ScrollArea>
-                  </div>
-                )}
-                <div className="pt-2 border-t">
-                  <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Apply Improvements
-                  </Button>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center rounded-md border bg-muted/20 text-muted-foreground text-sm">
+                        No code changes suggested.
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 pt-4 mt-auto border-t">
+                    <Button onClick={() => setImprovementResult(null)} variant="outline" className="w-full">
+                        Back
+                    </Button>
+                    <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        Apply Improvements
+                    </Button>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-                <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="font-semibold mb-2">Code Improvements</p>
-                <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
-                <Button onClick={handleGenerateImprovements}>
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Analyze Code
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+                <div className="p-3 rounded-full bg-primary/10 text-primary mb-4 border border-primary/20">
+                    <Wand2 className="w-10 h-10" />
+                </div>
+                <p className="font-semibold mb-2 text-lg">Code Improvements</p>
+                <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+                    Let AI analyze your code and suggest improvements for:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-2 text-left bg-muted/30 p-4 rounded-md border w-full max-w-sm">
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Readability and clarity</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Performance optimizations</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Best practice adherence</li>
+                </ul>
+                <Button onClick={handleGenerateImprovements} className="mt-8">
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Analyze Code
                 </Button>
               </div>
             )}

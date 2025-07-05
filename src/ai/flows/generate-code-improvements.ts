@@ -30,9 +30,14 @@ const createCodeImprovementsFlow = (ai: Genkit, provider: 'google' | 'ollama') =
         output: {schema: CodeImprovementOutputSchema},
         prompt: `You are an expert AI code assistant. Your task is to improve and refactor the given code based on best practices for quality, readability, and performance.
 
-You will produce two outputs:
-1.  **improvedCode**: The complete, refactored code. This should be a drop-in replacement for the original code.
-2.  **suggestions**: A clear, concise, human-readable summary of the key improvements you made. This should be formatted as a list or bullet points.
+You will produce a JSON object with two fields:
+1.  \`improvedCode\`: The complete, refactored code. This should be a drop-in replacement for the original code.
+2.  \`suggestions\`: A clear, concise, human-readable summary of the key improvements you made, formatted as a list or bullet points.
+
+**CRITICAL INSTRUCTIONS**:
+- Your response MUST be a valid JSON object.
+- If you cannot find any improvements, you MUST still return a JSON object with both \`improvedCode\` and \`suggestions\` fields set to empty strings (""). DO NOT return an empty response or an error.
+- The \`improvedCode\` field MUST contain the entire file content, not just a snippet.
 
 **Programming Language:** {{{language}}}
 
@@ -41,7 +46,7 @@ You will produce two outputs:
 {{{code}}}
 \`\`\`
 
-Now, generate the \`improvedCode\` and the \`suggestions\` in the specified JSON format.`,
+Now, generate the JSON response.`,
     });
 
     return ai.defineFlow(
