@@ -153,12 +153,9 @@ export function ToolPanel({
   }, [chatMessages]);
 
   useEffect(() => {
-    const executionOutputRef = document.querySelector('#execution-output-scroll-area');
-    if (executionOutputRef) {
-      const viewport = executionOutputRef.querySelector('div[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
+    const executionOutputEl = document.querySelector('#execution-output-scroll-area div[data-radix-scroll-area-viewport]');
+    if (executionOutputEl) {
+      executionOutputEl.scrollTop = executionOutputEl.scrollHeight;
     }
   }, [executionTranscript, isExecuting, isWaitingForInput]);
 
@@ -364,36 +361,35 @@ export function ToolPanel({
               ) : (
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md"
+                  className="flex-1 bg-muted/20 rounded-md p-4 pt-6"
                 >
-                  <pre className="font-mono text-sm whitespace-pre p-4 pt-6">
+                  <pre className="font-mono text-sm whitespace-pre h-full">
                     {executionTranscript}
+                    {isWaitingForInput && (
+                      <form
+                        onSubmit={handleExecutionInputSubmit}
+                        className="inline-flex items-center gap-2 pt-2 w-full"
+                      >
+                        <Input
+                          value={executionInput}
+                          onChange={(e) => setExecutionInput(e.target.value)}
+                          className="flex-1 h-8 text-xs"
+                          placeholder="Type your input here..."
+                          autoFocus
+                          spellCheck="false"
+                        />
+                        <Button type="submit" size="sm" className="h-8">
+                          Send
+                        </Button>
+                      </form>
+                    )}
                   </pre>
-                  {isWaitingForInput && (
-                    <form
-                      onSubmit={handleExecutionInputSubmit}
-                      className="flex-shrink-0 flex items-center gap-2 p-4 pt-2 font-mono text-sm"
-                    >
-                      <Input
-                        value={executionInput}
-                        onChange={(e) => setExecutionInput(e.target.value)}
-                        className="flex-1 h-8 text-xs"
-                        placeholder="Type your input here..."
-                        autoFocus
-                        spellCheck="false"
-                      />
-                      <Button type="submit" size="sm" className="h-8">
-                        <Send className="w-4 h-4 mr-2" />
-                        Send
-                      </Button>
-                    </form>
-                  )}
-                  {isExecuting && !isWaitingForInput && (
-                    <div className="flex items-center text-muted-foreground p-4 pt-0">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Executing...</span>
-                    </div>
-                  )}
+                   {isExecuting && !isWaitingForInput && (
+                     <div className="flex items-center text-muted-foreground pt-2">
+                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         <span>Executing...</span>
+                     </div>
+                   )}
                 </ScrollArea>
               )}
             </TabsContent>
@@ -402,16 +398,16 @@ export function ToolPanel({
           <TabsContent value="improvements" className="flex-1 mt-2 flex flex-col min-h-0">
             {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
               </div>
-            ) : improvementResult?.suggestions ? (
+            ) : improvementResult ? (
               <div className='flex-1 flex flex-col min-h-0'>
-                <ScrollArea className="flex-1 bg-muted/20 rounded-md min-h-0">
-                    <pre className="font-mono text-sm whitespace-pre p-4">{improvementResult.suggestions}</pre>
+                <ScrollArea className="flex-1 bg-muted/20 rounded-md p-4 min-h-0">
+                    <pre className="font-mono text-sm whitespace-pre">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-4 border-t mt-auto">
-                  <Button onClick={handleApplyImprovements} className="w-full">
+                  <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Apply Improvements
                   </Button>
