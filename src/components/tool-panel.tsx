@@ -174,19 +174,19 @@ export function ToolPanel({
       if (result && (result.improvedCode || result.suggestions)) {
         setImprovementResult(result);
       } else {
-        toast({ 
-            title: "No Improvements Found", 
-            description: "The AI did not suggest any changes for the current code." 
+        setImprovementResult({ 
+          suggestions: "The AI did not suggest any changes for the current code.", 
+          improvedCode: null 
         });
-        setImprovementResult(null);
       }
     } catch (error: unknown) {
       console.error(error);
-      let description = "Failed to generate improvements.";
+      let description = "An error occurred while analyzing the code. The AI may have failed to return a valid response.";
       if (error instanceof Error) {
         description = error.message;
       }
-      toast({ variant: "destructive", title: "Error", description });
+      setImprovementResult({ suggestions: `Error: ${description}`, improvedCode: null });
+      toast({ variant: "destructive", title: "Analysis Failed", description });
     } finally {
       setIsLoading(false);
     }
@@ -377,7 +377,7 @@ export function ToolPanel({
              <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md p-4"
+                  className="flex-1 bg-muted/20 rounded-md p-6"
                 >
                   <div className="font-mono text-sm whitespace-pre-wrap relative flex flex-col min-h-full">
                       <div className="flex-1">
