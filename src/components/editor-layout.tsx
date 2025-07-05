@@ -278,9 +278,12 @@ function EditorLayoutContent() {
           setIsWaitingForInput(true);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Execution error:", error);
-      const description = error instanceof Error ? error.message : "The AI simulator failed to return a valid response. This can happen with complex code. Please try again.";
+      let description = "The AI simulator failed to return a valid response. This can happen with complex code. Please try again.";
+      if (error instanceof Error) {
+        description = error.message;
+      }
       setExecutionTranscript(prev => prev + `\n[ERROR: ${description}]`);
       toast({ variant: 'destructive', title: 'Execution Error', description });
     } finally {
@@ -414,7 +417,10 @@ function EditorLayoutContent() {
             </div>
 
             {isMobile ? (
-              activeMobileView === 'editor' ? editorPanel : toolPanel
+              <>
+                {activeMobileView === 'editor' && editorPanel}
+                {activeMobileView === 'tools' && toolPanel}
+              </>
             ) : (
               <>
                 {editorPanel}

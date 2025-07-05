@@ -124,11 +124,14 @@ export function ToolPanel({
         url = URL.createObjectURL(blob);
         setPreviewUrl(url);
 
-      } catch(e) {
+      } catch(e: unknown) {
           console.error("Error generating web preview:", e);
+          let errorDescription = 'Could not generate the web preview.';
+          if (e instanceof Error) {
+              errorDescription = e.message;
+          }
           toast({ variant: 'destructive', title: 'Preview Error', description: 'Could not generate the web preview.' });
-          const description = e instanceof Error ? e.message : String(e);
-          const errorBlob = new Blob([`<h1>Preview Error</h1><p>${description}</p>`], { type: 'text/html' });
+          const errorBlob = new Blob([`<h1>Preview Error</h1><p>${errorDescription}</p>`], { type: 'text/html' });
           url = URL.createObjectURL(errorBlob);
           setPreviewUrl(url);
       }
@@ -171,9 +174,12 @@ export function ToolPanel({
       } else {
         throw new Error("The AI model returned an empty response.");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      const description = error instanceof Error ? error.message : "Failed to generate improvements.";
+      let description = "Failed to generate improvements.";
+      if (error instanceof Error) {
+        description = error.message;
+      }
       toast({ variant: "destructive", title: "Error", description });
     } finally {
       setIsLoading(false);
@@ -213,10 +219,13 @@ export function ToolPanel({
       if (result.updatedCode) {
         onCodeUpdate(result.updatedCode);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       
-      const errorMessageContent = error instanceof Error ? error.message : "Sorry, I couldn't get a response. Please try again.";
+      let errorMessageContent = "Sorry, I couldn't get a response. Please try again.";
+      if (error instanceof Error) {
+        errorMessageContent = error.message;
+      }
       
       const errorMessage = { role: 'assistant' as const, content: errorMessageContent };
       setChatMessages(prev => [...prev, errorMessage]);
@@ -224,7 +233,7 @@ export function ToolPanel({
       toast({ 
         variant: "destructive", 
         title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to get response from AI agent." 
+        description: errorMessageContent 
       });
     } finally {
       setIsChatting(false);
@@ -256,7 +265,7 @@ export function ToolPanel({
   return (
     <Card className="h-full w-full flex flex-col min-h-0">
       <CardHeader className="flex-row items-center justify-between p-2 border-b h-12">
-        <CardTitle className="text-base">Tools</CardTitle>
+        <CardTitle className="text-base font-semibold">Tools</CardTitle>
         {!isMobile && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close panel">
             <X className="h-4 w-4" />
@@ -360,31 +369,31 @@ export function ToolPanel({
              <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md"
+                  className="flex-1 bg-muted/20 rounded-md p-3"
                 >
-                  <pre className="font-mono text-sm whitespace-pre p-4 pt-6 h-full">
+                  <pre className="font-mono text-sm whitespace-pre-wrap">
                     {executionTranscript}
-                    {isWaitingForInput && (
-                      <form
-                        onSubmit={handleExecutionInputSubmit}
-                        className="inline-flex items-center gap-2 pt-2 w-full"
-                      >
-                        <Input
-                          value={executionInput}
-                          onChange={(e) => setExecutionInput(e.target.value)}
-                          className="flex-1 h-8 text-xs"
-                          placeholder="Type your input here..."
-                          autoFocus
-                          spellCheck="false"
-                        />
-                        <Button type="submit" size="sm" className="h-8">
-                          Send
-                        </Button>
-                      </form>
-                    )}
                   </pre>
+                  {isWaitingForInput && (
+                    <form
+                      onSubmit={handleExecutionInputSubmit}
+                      className="flex items-center gap-2 pt-2 mt-2"
+                    >
+                      <Input
+                        value={executionInput}
+                        onChange={(e) => setExecutionInput(e.target.value)}
+                        className="flex-1 h-8 text-xs font-mono"
+                        placeholder="Type your input here..."
+                        autoFocus
+                        spellCheck="false"
+                      />
+                      <Button type="submit" size="sm" className="h-8">
+                        Send
+                      </Button>
+                    </form>
+                  )}
                    {isExecuting && !isWaitingForInput && (
-                     <div className="absolute bottom-4 left-4 flex items-center text-muted-foreground">
+                     <div className="flex items-center text-muted-foreground mt-2">
                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                          <span>Executing...</span>
                      </div>
@@ -402,7 +411,7 @@ export function ToolPanel({
             ) : improvementResult ? (
               <div className='flex-1 flex flex-col min-h-0'>
                 <ScrollArea className="flex-1 bg-muted/20 rounded-md p-2">
-                    <pre className="font-mono text-sm whitespace-pre p-2">{improvementResult.suggestions}</pre>
+                    <pre className="font-mono text-sm whitespace-pre-wrap p-2">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-2 border-t mt-auto">
                   <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
