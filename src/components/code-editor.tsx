@@ -118,7 +118,7 @@ export function CodeEditor({
 
   return (
     <Card className="flex-1 w-full flex flex-col min-h-0">
-      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <CardHeader className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-6">
         <div className="flex-1 min-w-0 overflow-x-auto py-1">
           <CardTitle>{file.name}</CardTitle>
           <CardDescription>Language: {file.language}</CardDescription>

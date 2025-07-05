@@ -111,14 +111,14 @@ const ProjectTree = ({
                                     <span className="truncate">{node.name}</span>
                                 </div>
                             </CollapsibleTrigger>
-                            <div className={cn("items-center gap-1 sm:gap-0", isMobile ? 'flex' : 'hidden group-hover:flex')}>
-                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => onNewItem(node.id)}>
+                            <div className={cn("items-center gap-1", isMobile ? 'flex' : 'hidden group-hover:flex')}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onNewItem(node.id)}>
                                     <FilePlus className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => onNewItem(node.id)}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onNewItem(node.id)}>
                                     <FolderPlus className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setDeleteCandidate(node.id)}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteCandidate(node.id)}>
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
                             </div>
@@ -147,7 +147,7 @@ const ProjectTree = ({
                             <LanguageIcon language={node.language} />
                             <span className="truncate">{node.name}</span>
                         </button>
-                        <Button variant="ghost" size="icon" className={cn("w-6 h-6 ml-1", isMobile ? 'flex' : 'hidden group-hover:flex')} onClick={() => setDeleteCandidate(node.id)}>
+                        <Button variant="ghost" size="icon" className={cn("h-8 w-8 ml-1", isMobile ? 'flex' : 'hidden group-hover:flex')} onClick={() => setDeleteCandidate(node.id)}>
                             <Trash2 className="w-4 h-4" />
                         </Button>
                     </div>
