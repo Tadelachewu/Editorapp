@@ -352,7 +352,8 @@ function EditorLayoutContent() {
   const editorPanel = (
     <div className={cn(
       "flex-1 flex flex-col min-h-0 w-full",
-      !isMobile && (isToolPanelOpen ? "md:w-1/2" : "md:w-full")
+      !isMobile && (isToolPanelOpen ? "md:w-1/2" : "md:w-full"),
+      isMobile && activeMobileView !== 'editor' && "hidden"
     )}>
       <CodeEditor
         file={activeFile}
@@ -370,7 +371,10 @@ function EditorLayoutContent() {
   );
 
   const toolPanel = (
-    <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0 w-full">
+    <div className={cn(
+      "flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0 w-full",
+      isMobile && activeMobileView !== 'tools' && "hidden"
+    )}>
       <ToolPanel
         key={activeFileId}
         file={activeFile}
@@ -423,8 +427,8 @@ function EditorLayoutContent() {
 
             {isMobile ? (
               <>
-                {activeMobileView === 'editor' ? editorPanel : null}
-                {activeMobileView === 'tools' ? toolPanel : null}
+                {editorPanel}
+                {toolPanel}
               </>
             ) : (
               <>
