@@ -129,6 +129,8 @@ export function ToolPanel({
           let errorDescription = 'Could not generate the web preview.';
           if (e instanceof Error) {
               errorDescription = e.message;
+          } else if (typeof e === 'string') {
+            errorDescription = e;
           }
           toast({ variant: 'destructive', title: 'Preview Error', description: errorDescription });
           const errorBlob = new Blob([`<h1>Preview Error</h1><p>${errorDescription}</p>`], { type: 'text/html' });
@@ -169,16 +171,22 @@ export function ToolPanel({
     setImprovementResult(null);
     try {
       const result = await generateCodeImprovements({ code: content, language: file.language }, { useOllama });
-      if (result) {
+      if (result && (result.improvedCode || result.suggestions)) {
         setImprovementResult(result);
       } else {
-        throw new Error("The AI model returned an empty response.");
+        toast({ 
+            title: "No Improvements Found", 
+            description: "The AI did not suggest any changes for the current code." 
+        });
+        setImprovementResult(null);
       }
     } catch (error: unknown) {
       console.error(error);
       let description = "Failed to generate improvements.";
       if (error instanceof Error) {
         description = error.message;
+      } else if (typeof error === 'string') {
+        description = error;
       }
       toast({ variant: "destructive", title: "Error", description });
     } finally {
@@ -225,6 +233,8 @@ export function ToolPanel({
       let errorMessageContent = "Sorry, I couldn't get a response. Please try again.";
       if (error instanceof Error) {
         errorMessageContent = error.message;
+      } else if (typeof error === 'string') {
+        errorMessageContent = error;
       }
       
       const errorMessage = { role: 'assistant' as const, content: errorMessageContent };
@@ -265,7 +275,7 @@ export function ToolPanel({
   return (
     <Card className="h-full w-full flex flex-col min-h-0">
       <CardHeader className="flex-row items-center justify-between p-2 border-b h-12">
-        <CardTitle className="text-base font-semibold">Tools</CardTitle>
+        <CardTitle className="text-sm font-semibold sm:text-base">Tools</CardTitle>
         {!isMobile && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close panel">
             <X className="h-4 w-4" />
@@ -369,37 +379,35 @@ export function ToolPanel({
              <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md"
+                  className="flex-1 bg-muted/20 rounded-md p-4"
                 >
-                  <div className="p-2">
-                    <pre className="font-mono text-sm whitespace-pre-wrap">
-                      {executionTranscript}
-                    </pre>
-                    {isWaitingForInput && (
-                      <form
-                        onSubmit={handleExecutionInputSubmit}
-                        className="flex items-center gap-2 pt-2 mt-2 border-t"
-                      >
-                        <Input
-                          value={executionInput}
-                          onChange={(e) => setExecutionInput(e.target.value)}
-                          className="flex-1 h-8 text-xs font-mono"
-                          placeholder="Type your input here..."
-                          autoFocus
-                          spellCheck="false"
-                        />
-                        <Button type="submit" size="sm" className="h-8">
-                          Send
-                        </Button>
-                      </form>
-                    )}
-                    {isExecuting && !isWaitingForInput && (
-                      <div className="flex items-center text-muted-foreground mt-2">
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          <span>Executing...</span>
-                      </div>
-                    )}
+                  <div className="font-mono text-sm whitespace-pre-wrap">
+                      <span>{executionTranscript}</span>
+                      {isWaitingForInput && (
+                          <form
+                              onSubmit={handleExecutionInputSubmit}
+                              className="inline-flex items-baseline gap-2 w-full"
+                          >
+                              <Input
+                                  value={executionInput}
+                                  onChange={(e) => setExecutionInput(e.target.value)}
+                                  className="flex-1 h-auto p-0 m-0 bg-transparent border-0 shadow-none appearance-none focus-visible:ring-0 font-mono text-sm"
+                                  placeholder="Type input..."
+                                  autoFocus
+                                  spellCheck="false"
+                              />
+                              <Button type="submit" size="sm" variant="ghost" className="shrink-0">
+                                  Send
+                              </Button>
+                          </form>
+                      )}
                   </div>
+                  {isExecuting && !isWaitingForInput && (
+                    <div className="flex items-center text-muted-foreground mt-2 font-mono text-sm">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Executing...</span>
+                    </div>
+                  )}
                 </ScrollArea>
             </TabsContent>
           )}
@@ -407,15 +415,28 @@ export function ToolPanel({
           <TabsContent value="improvements" className="flex-1 mt-2 flex flex-col min-h-0">
             {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
               </div>
             ) : improvementResult ? (
-              <div className='flex-1 flex flex-col min-h-0'>
-                <ScrollArea className="flex-1 bg-muted/20 rounded-md">
-                    <pre className="font-mono text-sm whitespace-pre-wrap p-4">{improvementResult.suggestions}</pre>
-                </ScrollArea>
-                <div className="pt-2 border-t mt-auto">
+              <div className='flex-1 flex flex-col min-h-0 gap-4'>
+                {improvementResult.suggestions && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 px-1">Suggestions</h4>
+                    <ScrollArea className="h-32 bg-muted/20 rounded-md p-4">
+                        <pre className="font-sans text-sm whitespace-pre-wrap">{improvementResult.suggestions}</pre>
+                    </ScrollArea>
+                  </div>
+                )}
+                {improvementResult.improvedCode && (
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <h4 className="text-sm font-semibold mb-2 px-1">Improved Code</h4>
+                    <ScrollArea className="flex-1 bg-muted/20 rounded-md">
+                        <pre className="font-mono text-sm whitespace-pre-wrap p-4">{improvementResult.improvedCode}</pre>
+                    </ScrollArea>
+                  </div>
+                )}
+                <div className="pt-2 border-t">
                   <Button onClick={handleApplyImprovements} className="w-full" disabled={!improvementResult.improvedCode}>
                     <Wand2 className="mr-2 h-4 w-4" />
                     Apply Improvements
@@ -428,6 +449,7 @@ export function ToolPanel({
                 <p className="font-semibold mb-2">Code Improvements</p>
                 <p className="text-sm text-muted-foreground mb-4">Analyze your code for suggestions on quality, readability, and performance.</p>
                 <Button onClick={handleGenerateImprovements}>
+                  <Wand2 className="mr-2 h-4 w-4" />
                   Analyze Code
                 </Button>
               </div>
