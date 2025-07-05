@@ -253,8 +253,8 @@ export function ToolPanel({
 
   return (
     <Card className="h-full w-full flex flex-col min-h-0">
-      <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>Tools</CardTitle>
+      <CardHeader className="flex-row items-center justify-between p-2 border-b">
+        <CardTitle className="text-base">Tools</CardTitle>
         {!isMobile && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close panel">
             <X className="h-4 w-4" />
@@ -289,7 +289,7 @@ export function ToolPanel({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-4">
+          <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
             <ScrollArea className="flex-1 -mx-6 px-6" ref={scrollAreaRef}>
                 <div className="space-y-4 pr-2">
                     {chatMessages.length === 0 && !isChatting && (
@@ -362,46 +362,44 @@ export function ToolPanel({
                   <p className="text-xs">Click the "Run" button in the editor to start.</p>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col min-h-0">
-                  <ScrollArea
-                    id="execution-output-scroll-area"
-                    className="flex-1 bg-muted/20 rounded-md p-4"
-                  >
-                    <pre className="font-mono text-sm whitespace-pre">
-                      {executionTranscript}
-                      {isExecuting && !isWaitingForInput && (
-                        <div className="flex items-center text-muted-foreground mt-2">
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          <span>Executing...</span>
-                        </div>
-                      )}
-                    </pre>
-                    {isWaitingForInput && (
-                      <form
-                        onSubmit={handleExecutionInputSubmit}
-                        className="flex-shrink-0 flex items-center gap-2 mt-2 font-mono text-sm"
-                      >
-                        <Input
-                          value={executionInput}
-                          onChange={(e) => setExecutionInput(e.target.value)}
-                          className="flex-1 h-8 text-xs"
-                          placeholder="Type your input here..."
-                          autoFocus
-                          spellCheck="false"
-                        />
-                        <Button type="submit" size="sm" className="h-8">
-                          <Send className="w-4 h-4 mr-2" />
-                          Send
-                        </Button>
-                      </form>
-                    )}
-                  </ScrollArea>
-                </div>
+                <ScrollArea
+                  id="execution-output-scroll-area"
+                  className="flex-1 bg-muted/20 rounded-md"
+                >
+                  <pre className="font-mono text-sm whitespace-pre p-4 pt-6">
+                    {executionTranscript}
+                  </pre>
+                  {isWaitingForInput && (
+                    <form
+                      onSubmit={handleExecutionInputSubmit}
+                      className="flex-shrink-0 flex items-center gap-2 p-4 pt-2 font-mono text-sm"
+                    >
+                      <Input
+                        value={executionInput}
+                        onChange={(e) => setExecutionInput(e.target.value)}
+                        className="flex-1 h-8 text-xs"
+                        placeholder="Type your input here..."
+                        autoFocus
+                        spellCheck="false"
+                      />
+                      <Button type="submit" size="sm" className="h-8">
+                        <Send className="w-4 h-4 mr-2" />
+                        Send
+                      </Button>
+                    </form>
+                  )}
+                  {isExecuting && !isWaitingForInput && (
+                    <div className="flex items-center text-muted-foreground p-4 pt-0">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Executing...</span>
+                    </div>
+                  )}
+                </ScrollArea>
               )}
             </TabsContent>
           )}
 
-          <TabsContent value="improvements" className="flex-1 mt-4 flex flex-col min-h-0">
+          <TabsContent value="improvements" className="flex-1 mt-2 flex flex-col min-h-0">
             {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -430,7 +428,7 @@ export function ToolPanel({
               </div>
             )}
           </TabsContent>
-          <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-4">
+          <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-2">
             <ScrollArea className="flex-1 -mx-6 px-6">
                 {history.length > 0 ? (
                   <ul className="space-y-2 pr-2">
