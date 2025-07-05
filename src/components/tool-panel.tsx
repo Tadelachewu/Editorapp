@@ -185,8 +185,6 @@ export function ToolPanel({
       let description = "Failed to generate improvements.";
       if (error instanceof Error) {
         description = error.message;
-      } else if (typeof error === 'string') {
-        description = error;
       }
       toast({ variant: "destructive", title: "Error", description });
     } finally {
@@ -201,6 +199,7 @@ export function ToolPanel({
         title: "Code Improved",
         description: "The suggestions have been applied to the editor.",
       });
+      setImprovementResult(null);
     }
   };
 
@@ -233,8 +232,6 @@ export function ToolPanel({
       let errorMessageContent = "Sorry, I couldn't get a response. Please try again.";
       if (error instanceof Error) {
         errorMessageContent = error.message;
-      } else if (typeof error === 'string') {
-        errorMessageContent = error;
       }
       
       const errorMessage = { role: 'assistant' as const, content: errorMessageContent };
@@ -254,13 +251,14 @@ export function ToolPanel({
     e.preventDefault();
     handleSendChatMessage();
   };
-
+  
   const handleExecutionInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isWaitingForInput) return;
     onExecuteInput(executionInput);
     setExecutionInput('');
   };
+
 
   if (!file) {
     return (
@@ -381,33 +379,33 @@ export function ToolPanel({
                   id="execution-output-scroll-area"
                   className="flex-1 bg-muted/20 rounded-md p-4"
                 >
-                  <div className="font-mono text-sm whitespace-pre-wrap">
-                      <span>{executionTranscript}</span>
-                      {isWaitingForInput && (
-                          <form
-                              onSubmit={handleExecutionInputSubmit}
-                              className="inline-flex items-baseline gap-2 w-full"
-                          >
-                              <Input
-                                  value={executionInput}
-                                  onChange={(e) => setExecutionInput(e.target.value)}
-                                  className="flex-1 h-auto p-0 m-0 bg-transparent border-0 shadow-none appearance-none focus-visible:ring-0 font-mono text-sm"
-                                  placeholder="Type input..."
-                                  autoFocus
-                                  spellCheck="false"
-                              />
-                              <Button type="submit" size="sm" variant="ghost" className="shrink-0">
-                                  Send
-                              </Button>
-                          </form>
+                  <div className="font-mono text-sm whitespace-pre-wrap relative flex flex-col min-h-full">
+                      <div className="flex-1">
+                          <span>{executionTranscript}</span>
+                          {isWaitingForInput && (
+                              <form
+                                  onSubmit={handleExecutionInputSubmit}
+                                  className="inline-flex items-baseline gap-2 w-auto"
+                              >
+                                  <Input
+                                      value={executionInput}
+                                      onChange={(e) => setExecutionInput(e.target.value)}
+                                      className="flex-1 h-auto p-0 m-0 bg-transparent border-0 shadow-none appearance-none focus-visible:ring-0 font-mono text-sm inline w-auto"
+                                      placeholder="Type input..."
+                                      autoFocus
+                                      spellCheck="false"
+                                      size={executionInput.length || 15}
+                                  />
+                              </form>
+                          )}
+                      </div>
+                       {isExecuting && !isWaitingForInput && (
+                        <div className="flex items-center text-muted-foreground mt-2 font-mono text-sm">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <span>Executing...</span>
+                        </div>
                       )}
                   </div>
-                  {isExecuting && !isWaitingForInput && (
-                    <div className="flex items-center text-muted-foreground mt-2 font-mono text-sm">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Executing...</span>
-                    </div>
-                  )}
                 </ScrollArea>
             </TabsContent>
           )}
