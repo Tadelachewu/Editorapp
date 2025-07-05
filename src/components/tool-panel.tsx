@@ -362,35 +362,41 @@ export function ToolPanel({
                   <p className="text-xs">Click the "Run" button in the editor to start.</p>
                 </div>
               ) : (
-                <>
-                  <ScrollArea id="execution-output-scroll-area" className="flex-1 bg-muted/20 rounded-md min-h-0">
-                    <pre className="font-mono text-sm whitespace-pre p-6">
-                      {executionTranscript}
-                      {isExecuting && !isWaitingForInput && (
+                <div className="flex-1 flex flex-col min-h-0">
+                    <ScrollArea
+                    id="execution-output-scroll-area"
+                    className="flex-1 bg-muted/20 rounded-md"
+                    >
+                    <pre className="font-mono text-sm whitespace-pre px-4 pt-6 pb-4">
+                        {executionTranscript}
+                        {isExecuting && !isWaitingForInput && (
                         <div className="flex items-center text-muted-foreground mt-2">
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          <span>Executing...</span>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <span>Executing...</span>
                         </div>
-                      )}
+                        )}
                     </pre>
-                  </ScrollArea>
-                  {isWaitingForInput && (
-                    <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
-                      <Input
+                    </ScrollArea>
+                    {isWaitingForInput && (
+                    <form
+                        onSubmit={handleExecutionInputSubmit}
+                        className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm"
+                    >
+                        <Input
                         value={executionInput}
                         onChange={(e) => setExecutionInput(e.target.value)}
                         className="flex-1 h-8 text-xs"
                         placeholder="Type your input here..."
                         autoFocus
                         spellCheck="false"
-                      />
-                      <Button type="submit" size="sm" className="h-8">
+                        />
+                        <Button type="submit" size="sm" className="h-8">
                         <Send className="w-4 h-4 mr-2" />
                         Send
-                      </Button>
+                        </Button>
                     </form>
-                  )}
-                </>
+                    )}
+                </div>
               )}
             </TabsContent>
           )}
@@ -402,9 +408,9 @@ export function ToolPanel({
                 <p className="mt-4 text-sm text-muted-foreground">Generating improvements...</p>
               </div>
             ) : improvementResult?.suggestions ? (
-              <>
+              <div className='flex-1 flex flex-col min-h-0'>
                 <ScrollArea className="flex-1 bg-muted/20 rounded-md min-h-0">
-                    <pre className="font-mono text-sm whitespace-pre p-6">{improvementResult.suggestions}</pre>
+                    <pre className="font-mono text-sm whitespace-pre p-4">{improvementResult.suggestions}</pre>
                 </ScrollArea>
                 <div className="pt-4 border-t mt-auto">
                   <Button onClick={handleApplyImprovements} className="w-full">
@@ -412,7 +418,7 @@ export function ToolPanel({
                     Apply Improvements
                   </Button>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
                 <Bot className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
