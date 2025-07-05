@@ -68,7 +68,6 @@ export function ToolPanel({
   const [chatInput, setChatInput] = useState('');
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const executionOutputRef = useRef<HTMLDivElement>(null);
   const [executionInput, setExecutionInput] = useState('');
 
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
@@ -154,9 +153,12 @@ export function ToolPanel({
   }, [chatMessages]);
 
   useEffect(() => {
-    const viewport = executionOutputRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
+    const executionOutputRef = document.querySelector('#execution-output-scroll-area');
+    if (executionOutputRef) {
+      const viewport = executionOutputRef.querySelector('div[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     }
   }, [executionTranscript, isExecuting]);
 
@@ -287,9 +289,9 @@ export function ToolPanel({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-2">
-            <ScrollArea className="flex-1 -mx-6 px-6 py-4" ref={scrollAreaRef}>
-                <div className="space-y-4">
+          <TabsContent value="agent" className="flex-1 flex flex-col min-h-0 mt-4">
+            <ScrollArea className="flex-1 -mx-6 px-6" ref={scrollAreaRef}>
+                <div className="space-y-4 pr-2">
                     {chatMessages.length === 0 && !isChatting && (
                          <div className="text-center text-sm text-muted-foreground p-4">
                             <MessageSquare className="w-8 h-8 mx-auto mb-2" />
@@ -320,7 +322,7 @@ export function ToolPanel({
                     )}
                 </div>
             </ScrollArea>
-            <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2 pt-2 border-t mt-2">
+            <form onSubmit={handleChatFormSubmit} className="flex items-center gap-2 pt-4 border-t mt-auto">
                 <Textarea
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
@@ -353,7 +355,7 @@ export function ToolPanel({
               />
             </TabsContent>
           ) : (
-             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
+             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-4">
               {executionTranscript === '' && !isExecuting ? (
                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
                   <p>Output from your code will appear here.</p>
@@ -361,8 +363,8 @@ export function ToolPanel({
                 </div>
               ) : (
                 <>
-                  <ScrollArea className="flex-1 bg-muted/20 rounded-md p-4">
-                    <pre className="font-mono text-sm whitespace-pre">
+                  <ScrollArea id="execution-output-scroll-area" className="flex-1 bg-muted/20 rounded-md min-h-0">
+                    <pre className="font-mono text-sm whitespace-pre p-6">
                       {executionTranscript}
                       {isExecuting && !isWaitingForInput && (
                         <div className="flex items-center text-muted-foreground mt-2">
@@ -373,7 +375,7 @@ export function ToolPanel({
                     </pre>
                   </ScrollArea>
                   {isWaitingForInput && (
-                    <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-1 pt-2 bg-background font-mono text-sm">
+                    <form onSubmit={handleExecutionInputSubmit} className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm">
                       <Input
                         value={executionInput}
                         onChange={(e) => setExecutionInput(e.target.value)}
@@ -393,7 +395,7 @@ export function ToolPanel({
             </TabsContent>
           )}
 
-          <TabsContent value="improvements" className="flex-1 mt-2 flex flex-col min-h-0">
+          <TabsContent value="improvements" className="flex-1 mt-4 flex flex-col min-h-0">
             {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -401,10 +403,10 @@ export function ToolPanel({
               </div>
             ) : improvementResult?.suggestions ? (
               <>
-                <ScrollArea className="flex-1 -mx-6 px-6">
-                    <pre className="whitespace-pre p-4 font-code text-sm text-left">{improvementResult.suggestions}</pre>
+                <ScrollArea className="flex-1 bg-muted/20 rounded-md min-h-0">
+                    <pre className="font-mono text-sm whitespace-pre p-6">{improvementResult.suggestions}</pre>
                 </ScrollArea>
-                <div className="pt-2 border-t mt-2 flex-shrink-0">
+                <div className="pt-4 border-t mt-auto">
                   <Button onClick={handleApplyImprovements} className="w-full">
                     <Wand2 className="mr-2 h-4 w-4" />
                     Apply Improvements
@@ -422,10 +424,10 @@ export function ToolPanel({
               </div>
             )}
           </TabsContent>
-          <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-2">
-            <ScrollArea className="flex-1 -mx-6 px-6 py-4">
+          <TabsContent value="history" className="flex-1 flex flex-col min-h-0 mt-4">
+            <ScrollArea className="flex-1 -mx-6 px-6">
                 {history.length > 0 ? (
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 pr-2">
                     {history.map(v => (
                       <li key={v.vid} className="flex items-center justify-between rounded-md border p-2">
                         <div>
