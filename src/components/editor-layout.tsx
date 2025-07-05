@@ -342,6 +342,51 @@ function EditorLayoutContent() {
     continueExecution(executionTranscript, input);
   }, [isWaitingForInput, executionTranscript, continueExecution]);
 
+  const editorPanel = (
+    <div className={cn(
+      "flex-1 flex flex-col min-h-0",
+      !isMobile && (isToolPanelOpen ? "md:w-1/2" : "md:w-full")
+    )}>
+      <CodeEditor
+        file={activeFile}
+        content={currentContent}
+        onContentChange={handleContentChange}
+        onSave={handleSave}
+        onRun={handleRunCode}
+        isRunning={isExecuting}
+        useOllama={useOllama}
+        isToolPanelOpen={isToolPanelOpen}
+        onOpenToolPanel={() => setIsToolPanelOpen(true)}
+      />
+    </div>
+  );
+
+  const toolPanel = (
+    <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0">
+      <ToolPanel
+        key={activeFileId}
+        file={activeFile}
+        content={currentContent}
+        allItems={allItems || []}
+        history={activeFileHistory || []}
+        onRevert={handleRevert}
+        activeTab={activeToolTab}
+        onTabChange={setActiveToolTab}
+        onCodeUpdate={handleCodeUpdate}
+        isExecuting={isExecuting}
+        isWaitingForInput={isWaitingForInput}
+        executionTranscript={executionTranscript}
+        onExecuteInput={handleExecuteInput}
+        useOllama={useOllama}
+        chatMessages={chatMessages}
+        setChatMessages={setChatMessages}
+        isChatting={isChatting}
+        setIsChatting={setIsChatting}
+        onClose={() => setIsToolPanelOpen(false)}
+      />
+    </div>
+  );
+
   return (
     <>
        <NewFileDialog
@@ -368,53 +413,13 @@ function EditorLayoutContent() {
               <SidebarTrigger />
             </div>
 
-            {/* Editor Panel: Render on desktop OR when active on mobile */}
-            {(!isMobile || activeMobileView === 'editor') && (
-              <div className={cn(
-                "flex-1 flex flex-col min-h-0",
-                !isMobile && isToolPanelOpen && "md:w-1/2",
-                !isMobile && !isToolPanelOpen && "md:w-full"
-              )}>
-                <CodeEditor
-                  file={activeFile}
-                  content={currentContent}
-                  onContentChange={handleContentChange}
-                  onSave={handleSave}
-                  onRun={handleRunCode}
-                  isRunning={isExecuting}
-                  useOllama={useOllama}
-                  isToolPanelOpen={isToolPanelOpen}
-                  onOpenToolPanel={() => setIsToolPanelOpen(true)}
-                />
-              </div>
-            )}
-            
-            {/* Tool Panel: Render on desktop OR when active on mobile */}
-            {((!isMobile && isToolPanelOpen) || (isMobile && activeMobileView === 'tools')) && (
-              <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0">
-                <ToolPanel
-                  key={activeFileId}
-                  file={activeFile}
-                  content={currentContent}
-                  allItems={allItems || []}
-                  history={activeFileHistory || []}
-                  onRevert={handleRevert}
-                  activeTab={activeToolTab}
-                  onTabChange={setActiveToolTab}
-                  onCodeUpdate={handleCodeUpdate}
-                  isExecuting={isExecuting}
-                  isWaitingForInput={isWaitingForInput}
-                  executionTranscript={executionTranscript}
-                  onExecuteInput={handleExecuteInput}
-                  useOllama={useOllama}
-                  // Pass down lifted state
-                  chatMessages={chatMessages}
-                  setChatMessages={setChatMessages}
-                  isChatting={isChatting}
-                  setIsChatting={setIsChatting}
-                  onClose={() => setIsToolPanelOpen(false)}
-                />
-              </div>
+            {isMobile ? (
+              activeMobileView === 'editor' ? editorPanel : toolPanel
+            ) : (
+              <>
+                {editorPanel}
+                {isToolPanelOpen && toolPanel}
+              </>
             )}
           </div>
         </SidebarInset>
