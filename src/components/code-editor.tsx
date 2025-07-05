@@ -22,6 +22,7 @@ interface CodeEditorProps {
   useOllama: boolean;
   isToolPanelOpen: boolean;
   onOpenToolPanel: () => void;
+  isVisible: boolean;
 }
 
 const languageMap: Record<Language, string> = {
@@ -44,7 +45,8 @@ export function CodeEditor({
   isRunning, 
   useOllama,
   isToolPanelOpen,
-  onOpenToolPanel
+  onOpenToolPanel,
+  isVisible
 }: CodeEditorProps) {
   const monacoInstance = useMonaco();
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -55,14 +57,15 @@ export function CodeEditor({
   };
 
   useEffect(() => {
-    // This is to force a re-layout when the container size changes.
+    // This is to force a re-layout when the container size changes,
+    // especially on mobile when switching views.
     // A slight delay is sometimes needed for the DOM to update.
-    if (editorRef.current) {
+    if (editorRef.current && isVisible) {
         setTimeout(() => {
             editorRef.current?.layout();
         }, 100);
     }
-  }, [isToolPanelOpen]);
+  }, [isToolPanelOpen, isVisible]);
 
   useEffect(() => {
     if (!monacoInstance || !file || file.itemType !== 'file' || !file.language || !file.fileType) return;
@@ -118,10 +121,10 @@ export function CodeEditor({
 
   return (
     <Card className="flex-1 w-full flex flex-col min-h-0">
-      <CardHeader className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-6">
+      <CardHeader className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
         <div className="flex-1 min-w-0 overflow-x-auto py-1">
-          <CardTitle>{file.name}</CardTitle>
-          <CardDescription>Language: {file.language}</CardDescription>
+          <CardTitle className="text-lg sm:text-xl">{file.name}</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Language: {file.language}</CardDescription>
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
             {isWebApp ? (

@@ -236,12 +236,16 @@ function EditorLayoutContent() {
         setTimeout(() => {
             window.location.reload();
         }, 1500);
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Failed to reset project:", error);
+        let description = "Could not reset the project. Please check the console for errors.";
+        if (error instanceof Error) {
+            description = error.message;
+        }
         toast({
             variant: "destructive",
             title: "Reset Failed",
-            description: "Could not reset the project. Please check the console for errors.",
+            description,
         });
     }
   };
@@ -347,7 +351,7 @@ function EditorLayoutContent() {
 
   const editorPanel = (
     <div className={cn(
-      "flex-1 flex flex-col min-h-0",
+      "flex-1 flex flex-col min-h-0 w-full",
       !isMobile && (isToolPanelOpen ? "md:w-1/2" : "md:w-full")
     )}>
       <CodeEditor
@@ -360,12 +364,13 @@ function EditorLayoutContent() {
         useOllama={useOllama}
         isToolPanelOpen={isToolPanelOpen}
         onOpenToolPanel={() => setIsToolPanelOpen(true)}
+        isVisible={!isMobile || activeMobileView === 'editor'}
       />
     </div>
   );
 
   const toolPanel = (
-    <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0">
+    <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:w-1/2 min-h-0 w-full">
       <ToolPanel
         key={activeFileId}
         file={activeFile}
@@ -418,8 +423,8 @@ function EditorLayoutContent() {
 
             {isMobile ? (
               <>
-                {activeMobileView === 'editor' && editorPanel}
-                {activeMobileView === 'tools' && toolPanel}
+                {activeMobileView === 'editor' ? editorPanel : null}
+                {activeMobileView === 'tools' ? toolPanel : null}
               </>
             ) : (
               <>
