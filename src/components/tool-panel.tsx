@@ -160,7 +160,7 @@ export function ToolPanel({
         viewport.scrollTop = viewport.scrollHeight;
       }
     }
-  }, [executionTranscript, isExecuting]);
+  }, [executionTranscript, isExecuting, isWaitingForInput]);
 
   const handleGenerateImprovements = async () => {
     if (!file || !file.language) return;
@@ -355,7 +355,7 @@ export function ToolPanel({
               />
             </TabsContent>
           ) : (
-             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-4">
+             <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
               {executionTranscript === '' && !isExecuting ? (
                 <div className="text-center text-sm text-muted-foreground p-4 flex-1 flex flex-col items-center justify-center">
                   <p>Output from your code will appear here.</p>
@@ -363,39 +363,39 @@ export function ToolPanel({
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col min-h-0">
-                    <ScrollArea
+                  <ScrollArea
                     id="execution-output-scroll-area"
-                    className="flex-1 bg-muted/20 rounded-md"
-                    >
-                    <pre className="font-mono text-sm whitespace-pre px-4 pt-6 pb-4">
-                        {executionTranscript}
-                        {isExecuting && !isWaitingForInput && (
+                    className="flex-1 bg-muted/20 rounded-md p-4"
+                  >
+                    <pre className="font-mono text-sm whitespace-pre">
+                      {executionTranscript}
+                      {isExecuting && !isWaitingForInput && (
                         <div className="flex items-center text-muted-foreground mt-2">
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            <span>Executing...</span>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Executing...</span>
                         </div>
-                        )}
+                      )}
                     </pre>
-                    </ScrollArea>
                     {isWaitingForInput && (
-                    <form
+                      <form
                         onSubmit={handleExecutionInputSubmit}
-                        className="flex-shrink-0 flex items-center gap-2 border-t mt-2 pt-2 bg-background font-mono text-sm"
-                    >
+                        className="flex-shrink-0 flex items-center gap-2 mt-2 font-mono text-sm"
+                      >
                         <Input
-                        value={executionInput}
-                        onChange={(e) => setExecutionInput(e.target.value)}
-                        className="flex-1 h-8 text-xs"
-                        placeholder="Type your input here..."
-                        autoFocus
-                        spellCheck="false"
+                          value={executionInput}
+                          onChange={(e) => setExecutionInput(e.target.value)}
+                          className="flex-1 h-8 text-xs"
+                          placeholder="Type your input here..."
+                          autoFocus
+                          spellCheck="false"
                         />
                         <Button type="submit" size="sm" className="h-8">
-                        <Send className="w-4 h-4 mr-2" />
-                        Send
+                          <Send className="w-4 h-4 mr-2" />
+                          Send
                         </Button>
-                    </form>
+                      </form>
                     )}
+                  </ScrollArea>
                 </div>
               )}
             </TabsContent>
