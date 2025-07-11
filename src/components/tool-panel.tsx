@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Bot, History, Loader2, MessageSquare, User, Send, Terminal, Eye, Wand2, X, Check } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -427,7 +427,7 @@ export function ToolPanel({
              <TabsContent value="output" className="flex-1 flex flex-col min-h-0 mt-2">
                 <ScrollArea
                   id="execution-output-scroll-area"
-                  className="flex-1 bg-muted/20 rounded-md p-6"
+                  className="flex-1 bg-muted/20 rounded-md p-4"
                 >
                   <div className="font-mono text-sm whitespace-pre-wrap relative flex flex-col min-h-full">
                       <div className="flex-1">
@@ -502,23 +502,29 @@ export function ToolPanel({
               </div>
             ) : (
               <ScrollArea className="flex-1">
-                <div className="flex flex-col items-center justify-center text-center p-4">
-                  <div className="p-3 rounded-full bg-primary/10 text-primary mb-4 border border-primary/20">
-                      <Wand2 className="w-10 h-10" />
-                  </div>
-                  <p className="font-semibold mb-2 text-lg">Code Improvements</p>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                      Let AI analyze your code and suggest improvements for:
-                  </p>
-                  <ul className="text-sm text-muted-foreground space-y-2 text-left bg-muted/30 p-4 rounded-md border w-full max-w-sm">
-                      <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Readability and clarity</li>
-                      <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Performance optimizations</li>
-                      <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500 flex-shrink-0" /> Best practice adherence</li>
-                  </ul>
-                  <Button onClick={handleGenerateImprovements} className="mt-8">
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      Analyze Code
-                  </Button>
+                <div className="flex h-full items-center justify-center p-2">
+                  <Card className="w-full max-w-md text-center shadow-none border-0 sm:border sm:shadow-sm">
+                    <CardHeader>
+                      <div className="mx-auto p-3 rounded-full bg-primary/10 text-primary mb-2 border border-primary/20 w-fit">
+                        <Wand2 className="w-8 h-8" />
+                      </div>
+                      <CardTitle>Code Improvements</CardTitle>
+                      <CardDescription>
+                        Let AI analyze your code and suggest improvements for readability, performance, and best practices.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <ul className="text-sm text-muted-foreground space-y-2 text-left bg-muted/30 p-4 rounded-md border">
+                          <li className="flex items-start gap-3"><Check className="w-4 h-4 mt-0.5 text-green-500 flex-shrink-0" /> <span>Readability and clarity</span></li>
+                          <li className="flex items-start gap-3"><Check className="w-4 h-4 mt-0.5 text-green-500 flex-shrink-0" /> <span>Performance optimizations</span></li>
+                          <li className="flex items-start gap-3"><Check className="w-4 h-4 mt-0.5 text-green-500 flex-shrink-0" /> <span>Best practice adherence</span></li>
+                      </ul>
+                      <Button onClick={handleGenerateImprovements} className="w-full">
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        Analyze Code
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
               </ScrollArea>
             )}
