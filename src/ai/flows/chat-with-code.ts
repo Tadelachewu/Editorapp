@@ -104,7 +104,7 @@ export async function chatWithCode(
       return await ollamaChatFlow(input);
     } catch (e) {
       console.error("Ollama not available.", e);
-      throw new Error(`Ollama is enabled but the server is not reachable at http://${ollamaHost}:11434. Please start the Ollama server.`);
+      throw new Error(`Ollama is enabled but the server is not reachable at http://${ollamaHost}:11434. Please start the Ollama server, or switch to Google AI in the sidebar's "AI Settings".`);
     }
   }
   return googleChatFlow(input);
